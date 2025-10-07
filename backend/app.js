@@ -73,6 +73,15 @@ app.get("/logout", (req, res, next) => {
     res.send({ message: "Logged out successfully" });
   });
 });
+//authentication
+app.get("/check-auth", (req, res) => {
+  if (req.isAuthenticated()) {
+    res.json({ user: req.user });
+  } else {
+    res.status(401).json({ user: null });
+  }
+});
+
 
 // Protected Dashboard
 app.get("/dashboard", (req, res) => {

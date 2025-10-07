@@ -1,45 +1,30 @@
 import { Navbar, Container, Form, Button } from "react-bootstrap";
 import logo from "../images/fulllogo.jpg";
 import { Link, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
 import "../styles/header.css";
-import 'bootstrap/dist/css/bootstrap.min.css';
+import "bootstrap/dist/css/bootstrap.min.css";
+import { useAuth } from "../contexts/AuthContext"; // ✅ correct path
 
 export default function Header() {
-  const [expanded, setExpanded] = useState(false); 
-  const [isAuthenticated, setIsAuthenticated] = useState(
-    localStorage.getItem("isAuthenticated") === "true"
-  );
+  const { user, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
-  // Keep login state updated if localStorage changes
-  useEffect(() => {
-    const checkAuth = () => {
-      setIsAuthenticated(localStorage.getItem("isAuthenticated") === "true");
-    };
-    window.addEventListener("storage", checkAuth);
-    return () => window.removeEventListener("storage", checkAuth);
-  }, []);
-
-  const handleLogout = () => {
-    localStorage.removeItem("isAuthenticated");
-    localStorage.removeItem("username");
-    setIsAuthenticated(false);
-    navigate("/"); // redirect to login
+  const handleLogout = async () => {
+    await logout();
+    navigate("/");
   };
 
   const handleProtectedNav = (path) => {
     if (isAuthenticated) navigate(path);
-    else navigate("/"); // redirect to login if not authenticated
+    else navigate("/");
   };
 
   return (
     <Navbar
       expand="lg"
-      expanded={expanded}
-      onToggle={setExpanded}
       fixed="top"
       className="shadow-sm py-3 navbar-gradient"
+      collapseOnSelect
     >
       <Container className="d-flex align-items-center justify-content-between">
         <Navbar.Brand>
@@ -61,7 +46,10 @@ export default function Header() {
             placeholder="Search groceries..."
             className="me-2"
           />
-          <Button type="submit" style={{ backgroundColor: "#35742f", borderColor: "#35742f" }}>
+          <Button
+            type="submit"
+            style={{ backgroundColor: "#35742f", borderColor: "#35742f" }}
+          >
             Search
           </Button>
         </Form>
@@ -76,17 +64,29 @@ export default function Header() {
               <i className="fa-solid fa-triangle-exclamation fa-lg"></i>
             </span>
           )}
-
+          {/* here performing the terenary operator */}
           {isAuthenticated ? (
-            <Button variant="link" onClick={handleLogout} className="text-dark">
-              Logout
-            </Button>
+            <>
+              <span className="me-3 text-dark">
+                Hi, {user?.username || "User"}
+              </span>
+              <Button
+                variant="link"
+                onClick={handleLogout}
+                className="text-dark"
+              >
+                Logout
+              </Button>
+            </>
           ) : (
             <>
-              <Link to="/" className="me-3 text-dark">Login</Link>
-              <Link to="/signup" className="text-dark">Signup</Link>
+              <Link to="/" className="me-3 text-dark">
+                Login
+              </Link>
+              <Link to="/signup" className="text-dark">
+                Signup
+              </Link>
             </>
-
           )}
         </div>
       </Container>

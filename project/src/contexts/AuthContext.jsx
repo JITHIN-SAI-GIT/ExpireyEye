@@ -1,58 +1,58 @@
-import React, { createContext, useContext, useState } from 'react';
+// src/context/AuthContext.jsx
+import { createContext, useContext, useEffect, useState } from "react";
+import axios from "axios";
 
-const AuthContext = createContext(undefined);
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
+const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const login = async (email, password) => {
-    // Mock authentication - in real app, this would call an API
-    if (email === 'owner@store.com' && password === 'password') {
-      setUser({
-        id: '1',
-        name: 'John Store Owner',
-        email: 'owner@store.com',
-        role: 'owner'
-      });
-      return true;
-    }
-    return false;
+  // Configure axios for session cookies
+  axios.defaults.withCredentials = true;
+  axios.defaults.baseURL = "http://localhost:3000";
+
+  // ✅ Check session when app starts
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const res = await axios.get("/check-auth");
+        setUser(res.data.user);
+      } catch {
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    checkSession();
+  }, []);
+
+  // ✅ Login
+  const login = async (username, password) => {
+    const res = await axios.post("/login", { username, password });
+    setUser(res.data.user);
   };
 
-  const signup = async (name, email, password) => {
-    // Mock signup - in real app, this would call an API
-    setUser({
-      id: Date.now().toString(),
-      name,
-      email,
-      role: 'owner'
-    });
-    return true;
+  // ✅ Signup
+  const signup = async (username, email, password) => {
+    await axios.post("/signup", { username, email, password });
   };
 
-  const logout = () => {
+  // ✅ Logout
+  const logout = async () => {
+    await axios.get("/logout");
     setUser(null);
   };
 
-  const value = {
-    user,
-    login,
-    signup,
-    logout,
-    isAuthenticated: !!user
-  };
+  const isAuthenticated = !!user;
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider
+      value={{ user, login, signup, logout, isAuthenticated, loading }}
+    >
       {children}
     </AuthContext.Provider>
   );
 };
+
+export const useAuth = () => useContext(AuthContext);

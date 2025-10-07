@@ -3,27 +3,23 @@ import Logo from "../images/logo.jpg";
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
+import { useAuth } from "../contexts/AuthContext"; // ✅ import auth context
 
 export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const { login } = useAuth(); // ✅ access login function
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
 
     try {
-      const res = await axios.post(
-        "http://localhost:3000/login",
-        { username, password },
-        { withCredentials: true }
-      );
-
-      // ✅ Save login state so Header knows user is authenticated
-      localStorage.setItem("isAuthenticated", "true");
-      localStorage.setItem("username", res.data.user.username);
+      // ✅ Use the login function from the context directly
+      // It handles the API call AND updates the global state.
+      await login(username, password);
       navigate("/dashboard");
     } catch (err) {
       console.error(err);
