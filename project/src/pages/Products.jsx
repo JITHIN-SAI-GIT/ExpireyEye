@@ -38,7 +38,7 @@ const Products = () => {
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Product Management</h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">ℙ𝕣𝕠𝕕𝕦𝕔𝕥 𝕄𝕒𝕟𝕒𝕘𝕖𝕞𝕖𝕟𝕥</h1>
             <p className="text-gray-600">Manage your inventory and track product expiration dates</p>
           </div>
           <button className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2">

@@ -1,7 +1,8 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 .nav{
     background-color:rgb(17, 151, 17);
 }
-body{
-  background: #ffffff;
-background: linear-gradient(90deg, rgba(255, 255, 255, 1) 22%, rgb(17, 116, 24) 100%);
-}
+

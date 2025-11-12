@@ -1,14 +1,342 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="./src/images/logo.jpg" style="border-radius:50%;" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Grocery Store Management Dashboard</title>
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="./src/images/logo.jpg"
+      style="border-radius: 50%"
+    />
   </head>
   <body>
     <div id="root"></div>
+
     <script type="module" src="/src/main.jsx"></script>
-    <script src="https://kit.fontawesome.com/cf1410e3fd.js" crossorigin="anonymous"></script>
+    <script
+      src="https://kit.fontawesome.com/cf1410e3fd.js"
+      crossorigin="anonymous"
+    ></script>
+
+    <!-- ✅ Chatbot Icon -->
+    <div id="chatbot-icon" onclick="toggleChat()">
+      <img src="./src/images/logo.jpg" alt="Bot Logo" />
+    </div>
+
+    <!-- ✅ Chatbot UI -->
+    <div id="chatbot">
+      <div id="chat-header">
+        <div class="profile-img">
+          <img src="./src/images/logo.jpg" alt="Profile" />
+        </div>
+
+        𝔼𝕩𝕡𝕚𝕣𝕪 𝔼𝕪𝕖 𝔸𝕤𝕤𝕚𝕤𝕥𝕒𝕟𝕥
+        <span onclick="toggleChat()" style="cursor: pointer">✖</span>
+      </div>
+      <div id="chat-body"></div>
+      <div id="chat-input-area">
+        <input
+          id="chat-input"
+          type="text"
+          placeholder="Ask about expiry or say hi..."
+          onkeydown="if(event.key==='Enter') sendMsg()"
+        />
+        <button id="send-btn" onclick="sendMsg()">
+          <i class="fas fa-paper-plane"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- ✅ Styles -->
+    <style>
+      /* Floating logo animation */
+      @keyframes floatPulse {
+        0% {
+          transform: translateY(0px) scale(1);
+          box-shadow: 0 0 8px rgba(12, 165, 35, 0.5);
+        }
+        50% {
+          transform: translateY(-4px) scale(1.05);
+          box-shadow: 0 0 15px rgba(12, 165, 35, 0.8);
+        }
+        100% {
+          transform: translateY(0px) scale(1);
+          box-shadow: 0 0 8px rgba(12, 165, 35, 0.5);
+        }
+      }
+
+      /* Message fade-in animation */
+      @keyframes fadeInMsg {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Chatbox slide-up animation */
+      @keyframes slideUp {
+        from {
+          transform: translateY(50px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+
+      /* ✅ Chatbot Icon */
+      #chatbot-icon {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: #0ca523;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        overflow: hidden;
+        z-index: 9999;
+        animation: floatPulse 3s infinite ease-in-out;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+
+      #chatbot-icon:hover {
+        transform: scale(1.1) rotate(10deg);
+        box-shadow: 0 0 20px #0ca523;
+      }
+      .profile-img {
+        width: 40px; /* same as w-10 */
+        height: 40px; /* same as h-10 */
+        border-radius: 50%; /* same as rounded-full */
+        border: 2px solid #22c55e; /* Tailwind's green-500 */
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .profile-img img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      #chatbot-icon img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 50%;
+      }
+
+      /* ✅ Chatbox */
+      #chatbot {
+        position: fixed;
+        bottom: 90px;
+        right: 20px;
+        width: 340px;
+        background: #ffffff;
+        border-radius: 18px;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+        display: none;
+        flex-direction: column;
+        overflow: hidden;
+        z-index: 9999;
+        animation: slideUp 0.3s ease forwards;
+      }
+
+      #chat-header {
+        background: linear-gradient(90deg, #0ca523, #09991f);
+        color: white;
+        padding: 12px;
+        font-weight: bold;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 15px;
+      }
+
+      /* ✅ Chat Body */
+      #chat-body {
+        padding: 10px;
+        max-height: 350px;
+        overflow-y: auto;
+        background: #f7f7f7;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      #chat-body::-webkit-scrollbar {
+        width: 6px;
+      }
+      #chat-body::-webkit-scrollbar-thumb {
+        background: #0ca523;
+        border-radius: 4px;
+      }
+
+      /* ✅ Chat Input */
+      #chat-input-area {
+        display: flex;
+        align-items: center;
+        border-top: 1px solid #ddd;
+        background: white;
+      }
+
+      #chat-input {
+        flex: 1;
+        border: none;
+        padding: 12px;
+        font-size: 14px;
+        outline: none;
+        border-radius: 0 0 0 12px;
+      }
+
+      #send-btn {
+        background: #0ca523;
+        color: white;
+        border: none;
+        padding: 12px 16px;
+        border-radius: 0 0 12px 0;
+        cursor: pointer;
+        transition: background 0.3s ease;
+      }
+
+      #send-btn:hover {
+        background: #09991f;
+      }
+
+      /* ✅ Chat bubbles */
+      .msg {
+        padding: 8px 12px;
+        border-radius: 14px;
+        max-width: 80%;
+        word-wrap: break-word;
+        animation: fadeInMsg 0.3s ease;
+      }
+
+      .bot-msg {
+        background: #e6f9ea;
+        align-self: flex-start;
+        color: #034d0d;
+      }
+
+      .user-msg {
+        background: #c8ffd1;
+        align-self: flex-end;
+        color: #045912;
+      }
+    </style>
+
+    <!-- ✅ Script -->
+    <script>
+      let products = [];
+
+      async function loadProducts() {
+        try {
+          const res = await fetch("http://localhost:3000/products");
+          products = await res.json();
+          console.log(`✅ Loaded ${products.length} products`);
+        } catch (err) {
+          console.error("❌ Could not load products:", err);
+        }
+      }
+
+      loadProducts();
+
+      function toggleChat() {
+        const chat = document.getElementById("chatbot");
+        chat.style.display = chat.style.display === "flex" ? "none" : "flex";
+      }
+
+      function sendMsg() {
+        const input = document.getElementById("chat-input");
+        const msg = input.value.trim();
+        if (!msg) return;
+        addMessage(msg, "user");
+        input.value = "";
+        setTimeout(() => handleBot(msg), 400);
+      }
+
+      function addMessage(text, sender = "bot") {
+        const body = document.getElementById("chat-body");
+        const div = document.createElement("div");
+        div.className = `msg ${sender}-msg`;
+        div.textContent = text;
+        body.appendChild(div);
+        body.scrollTop = body.scrollHeight;
+      }
+
+      function handleBot(msg) {
+        msg = msg.toLowerCase();
+        const today = new Date();
+        let reply = "Hmm, I didn’t quite get that 🤔";
+
+        // 🧠 General Chat
+        if (["hi", "hello", "hey"].some((w) => msg.includes(w))) {
+          reply = "Hey there 👋! I’m your Expireery Assistant. How can I help?";
+        } else if (msg.includes("how are you")) {
+          reply = "I’m doing great! Just keeping an eye on expiry dates 😄";
+        } else if (msg.includes("your name")) {
+          reply = "I’m Expireery Assistant — your grocery buddy 🤖";
+        } else if (msg.includes("thank")) {
+          reply = "You’re very welcome! 💚";
+        } else if (msg.includes("joke")) {
+          reply =
+            "😂 Why did the tomato turn red? Because it saw the salad dressing!";
+        } else if (msg.includes("weather")) {
+          reply =
+            "I don’t check weather forecasts, but I can predict expiring products 🌦️😄";
+        } else if (msg.includes("bye")) {
+          reply = "Bye 👋! Stay fresh and keep your groceries updated!";
+        } else if (msg.includes("help")) {
+          reply =
+            "You can ask:\n• How many products are expired?\n• Show expiring soon\n• Categories available\n• Total products\nOr just chat with me! 🗣️";
+        }
+
+        // 🧾 Product logic
+        else if (!products.length) {
+          reply = "Product data is still loading... please wait a sec ⏳";
+        } else if (msg.includes("total")) {
+          reply = `There are ${products.length} total products.`;
+        } else if (msg.includes("expired")) {
+          const expired = products.filter(
+            (p) => new Date(p.expiryDate) < today
+          );
+          reply = expired.length
+            ? `There are ${expired.length} expired products: ${expired
+                .map((p) => p.name)
+                .slice(0, 8)
+                .join(", ")}...`
+            : "No expired products 🎉";
+        } else if (msg.includes("soon")) {
+          const soon = products.filter((p) => {
+            const exp = new Date(p.expiryDate);
+            const diff = (exp - today) / (1000 * 60 * 60 * 24);
+            return diff > 0 && diff <= 7;
+          });
+          reply = soon.length
+            ? `Products expiring within 7 days: ${soon
+                .map((p) => p.name)
+                .slice(0, 8)
+                .join(", ")}...`
+            : "No products expiring soon ✅";
+        } else if (msg.includes("category")) {
+          const categories = [...new Set(products.map((p) => p.category))];
+          reply = `Available categories: ${categories.join(", ")}.`;
+        }
+
+        addMessage(reply, "bot");
+      }
+    </script>
   </body>
 </html>

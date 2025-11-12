@@ -35,29 +35,10 @@ export default function Header() {
             onClick={() => handleProtectedNav("/dashboard")}
           />
         </Navbar.Brand>
-
-        <Form
-          className="d-flex search-bar"
-          style={{ flex: 1, maxWidth: 400, margin: "0 20px" }}
-          onSubmit={(e) => e.preventDefault()}
-        >
-          <Form.Control
-            type="text"
-            placeholder="Search groceries..."
-            className="me-2"
-          />
-          <Button
-            type="submit"
-            style={{ backgroundColor: "#35742f", borderColor: "#35742f" }}
-          >
-            Search
-          </Button>
-        </Form>
-
         <div className="d-flex align-items-center">
           {isAuthenticated && (
             <span
-              className="me-3 text-dark"
+              className="me-3 text-white"
               style={{ cursor: "pointer" }}
               onClick={() => handleProtectedNav("/alerts")}
             >
@@ -67,7 +48,7 @@ export default function Header() {
           {/* here performing the terenary operator */}
           {isAuthenticated ? (
             <>
-              <span className="me-3 text-dark">
+              <span className="me-3 text-white">
                 Hi, {user?.username || "User"}
               </span>
               <Button
@@ -80,14 +61,14 @@ export default function Header() {
             </>
           ) : (
             <>
-              <Link to="/" className="me-3 text-dark">
+              <Link to="/" className="me-3 text-white">
                 Login
               </Link>
-              <Link to="/signup" className="text-dark">
+              <Link to="/signup" className="me-4 text-white">
                 Signup
               </Link>
             </>
-          )}
+          )}  
         </div>
       </Container>
     </Navbar>

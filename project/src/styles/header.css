@@ -1,7 +1,6 @@
 .navbar-gradient {
-  background: linear-gradient(90deg, #ffffff 0%, #35742f 100%);
+  background-color:rgba(18, 22, 41, 0.285) 
 }
-
 
 .bar a {
   color: white;
