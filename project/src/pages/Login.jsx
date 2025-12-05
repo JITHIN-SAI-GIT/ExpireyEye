@@ -42,44 +42,49 @@ export default function Login() {
             className="intro-video"
             onEnded={() => setShowVideo(false)}
           >
-            <source src="/Green Modern Grocery Delivery Video.mp4" type="video/mp4" />
+            <source
+              src="/Green Modern Grocery Delivery Video.mp4"
+              type="video/mp4"
+            />
             Your browser does not support the video tag.
           </video>
         </div>
       ) : (
         // 🔐 Login form after video
-        <form onSubmit={handleLogin}>
-          <div className="login-container">
-            <img src={Logo} alt="logo" />
-            <h1>
-              <b>Grocery Store Login</b>
-            </h1>
+        <div className="login-background">
+          <form onSubmit={handleLogin}>
+            <div className="login-container">
+              <img src={Logo} alt="logo" />
+              <h1>
+                <b>Grocery Store Login</b>
+              </h1>
 
-            <input
-              type="text"
-              value={username}
-              placeholder="Username"
-              onChange={(e) => setUsername(e.target.value)}
-              required
-            />
+              <input
+                type="text"
+                value={username}
+                placeholder="Username"
+                onChange={(e) => setUsername(e.target.value)}
+                required
+              />
 
-            <input
-              type="password"
-              value={password}
-              placeholder="Password"
-              autoComplete="current-password"
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          <div className="login-links">
-            <p>
-              <Link to="/signup">Forgot Password? or SignUp</Link>
-            </p>
-          </div>
-            <button type="submit">𝕃𝕠𝕘𝕚𝕟</button>
-            {error && <p className="error">{error}</p>}
-          </div>
-        </form>
+              <input
+                type="password"
+                value={password}
+                placeholder="Password"
+                autoComplete="current-password"
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+              <div className="login-links">
+                <p>
+                  <Link to="/signup">Forgot Password? or SignUp</Link>
+                </p>
+              </div>
+              <button type="submit">𝕃𝕠𝕘𝕚𝕟</button>
+              {error && <p className="error">{error}</p>}
+            </div>
+          </form>
+        </div>
       )}
     </>
   );

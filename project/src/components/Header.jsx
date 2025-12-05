@@ -62,10 +62,10 @@ export default function Header() {
           ) : (
             <>
               <Link to="/" className="me-3 text-white">
-                Login
+                <b>Login</b>
               </Link>
               <Link to="/signup" className="me-4 text-white">
-                Signup
+                <b>Signup</b>
               </Link>
             </>
           )}  

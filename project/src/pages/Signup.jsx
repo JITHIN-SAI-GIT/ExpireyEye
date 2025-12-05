@@ -29,6 +29,7 @@ export default function Signup() {
   };
 
   return (
+    <div className="login-background">
     <div className="signup-container">
       <img src={Logo} alt="logo" />
       <h1><b>Grocery Store Signup</b></h1>
@@ -67,6 +68,7 @@ export default function Signup() {
         <button type="submit">𝕊𝕚𝕘𝕟 𝕌𝕡</button>
         <p><Link to="/">Already have an account? Login</Link></p>
       </form>
+    </div>
     </div>
   );
 }
