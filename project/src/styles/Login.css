@@ -20,6 +20,19 @@ body {
   align-items: center;
   animation: fadeIn 0.5s ease-in-out;
 }
+/* Full-screen background for login page */
+.login-countainer {
+  min-height: 100vh;
+  width: 100%;
+  background-image: url("../images/Misty\ Meadow.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 
 .intro-video {
   width: 100%;

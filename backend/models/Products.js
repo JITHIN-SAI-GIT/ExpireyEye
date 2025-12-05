@@ -10,11 +10,7 @@ const productSchema = new mongoose.Schema({
     type: Number, 
     required: true 
   },
-  costPrice: { // <-- ADD THIS: What YOU paid for the item
-    type: Number, 
-    required: true 
-  },
-  salePrice: { // <-- ADD THIS: What you SELL the item for
+  price: { // <-- ADD THIS: What YOU paid for the item
     type: Number, 
     required: true 
   },

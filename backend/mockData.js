@@ -70,7 +70,24 @@ async function seedProducts() {
 
     await Product.deleteMany(); // Clear existing data (optional)
 
-    const mockProducts = [];
+    const mockProducts = [
+       {
+    name: "Milk",
+    category: "Dairy",
+    quantity: 10,
+    price: 40,
+    expiryDate: new Date("2025-02-10"),
+    username: "admin",
+  },
+  {
+    name: "Bread",
+    category: "Bakery",
+    quantity: 20,
+    price: 30,
+    expiryDate: new Date("2025-01-20"),
+    username: "store1",
+  }
+    ];
 
     for (let i = 0; i < 100; i++) {
       const category = randomItem(categories);

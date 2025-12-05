@@ -4,7 +4,6 @@ const passport = require("passport");
 const LocalStrategy = require("passport-local");
 const session = require("express-session");
 const cors = require("cors");
-
 const User = require("./models/User"); // passport-local-mongoose model
 const Product = require("./models/Products"); // ✅ relative path fixed
 const DashboardRoutes = require("./routes/Dashboardroutes");
@@ -108,9 +107,9 @@ app.use("/stats",Expireeryproducts);
 
 // Add product (POST)
 app.post("/products/add", (req, res) => {
-  if (!req.isAuthenticated()) {
-    return res.status(401).json({ msg: "Unauthorized" });
-  }
+  // if (!req.isAuthenticated()) {
+  //   return res.status(401).json({ msg: "Unauthorized" });
+  // }
 
   const { name, category, price, quantity, expiryDate } = req.body;
   const username = req.user.username;
