@@ -15,10 +15,6 @@ const productSchema = new mongoose.Schema({
     required: true 
   },
   expiryDate: Date,
-  username: { 
-    type: String, 
-    required: true, 
-  } 
 });
 
 module.exports = mongoose.model("Product", productSchema);

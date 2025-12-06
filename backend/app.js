@@ -1,23 +1,40 @@
+// ==================== ENV & DEPENDENCIES ====================
+require("dotenv").config(); // load .env FIRST
+
 const express = require("express");
 const mongoose = require("mongoose");
 const passport = require("passport");
 const LocalStrategy = require("passport-local");
 const session = require("express-session");
 const cors = require("cors");
+
 const User = require("./models/User"); // passport-local-mongoose model
-const Product = require("./models/Products"); // ✅ relative path fixed
+const Product = require("./models/Products");
 const DashboardRoutes = require("./routes/Dashboardroutes");
-const productRoutes = require("./routes/productRoutes"); // if used elsewhere
-const Expireeryproducts = require("./routes/ExpieryProducts")
+const productRoutes = require("./routes/productRoutes");
+const Expireeryproducts = require("./routes/ExpieryProducts");
 
 const app = express();
 
-// ==================== Middleware ====================
+// ==================== DATABASE SETUP ====================
+
+// Read from .env → must match key name in .env
+const mongoURI = process.env.ATLAS_URL;
+
+// Optional: for debugging only (avoid logging in production)
+// console.log("DEBUG ATLAS_URL:", JSON.stringify(mongoURI));
+
+if (!mongoURI) {
+  console.error("❌ ATLAS_URL is NOT defined in .env");
+  process.exit(1);
+}
+
+// ==================== MIDDLEWARE ====================
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ✅ CORS setup (frontend on port 5173)
+// CORS (frontend on port 5173)
 app.use(
   cors({
     origin: "http://localhost:5173",
@@ -26,35 +43,28 @@ app.use(
   })
 );
 
-// ✅ Session setup (before passport middleware)
+// Session (must be before passport.session)
 app.use(
   session({
-    secret: "your-secret-key",
+    secret: process.env.SECRET, // move this to process.env in production
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: false, // should be true in production with HTTPS
+      secure: false, // true in production with HTTPS
       httpOnly: true,
       maxAge: 1000 * 60 * 60 * 24, // 1 day
     },
   })
 );
 
-// ✅ Passport setup
+// Passport
 app.use(passport.initialize());
 app.use(passport.session());
 passport.use(new LocalStrategy(User.authenticate()));
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
-// ==================== Database ====================
-
-mongoose
-  .connect("mongodb://127.0.0.1:27017/Expireery")
-  .then(() => console.log("✅ Database connected"))
-  .catch((err) => console.error("❌ DB Error:", err));
-
-// ==================== Routes ====================
+// ==================== AUTH ROUTES ====================
 
 // Signup
 app.post("/signup", async (req, res) => {
@@ -64,6 +74,7 @@ app.post("/signup", async (req, res) => {
     await User.register(newUser, password);
     res.send({ message: "User created successfully" });
   } catch (err) {
+    console.error("Signup error:", err);
     res.status(400).send(err);
   }
 });
@@ -99,55 +110,66 @@ app.get("/dashboard", (req, res) => {
   }
 });
 
-// Extra routes
+// ==================== EXTRA ROUTES ====================
+
 app.use("/summary", DashboardRoutes);
-app.use("/products", productRoutes); 
-app.use("/stats",Expireeryproducts); 
-// ==================== Product Routes ====================
+app.use("/products", productRoutes);
+app.use("/stats", Expireeryproducts);
+
+// ==================== PRODUCT ROUTES ====================
 
 // Add product (POST)
-app.post("/products/add", (req, res) => {
-  // if (!req.isAuthenticated()) {
-  //   return res.status(401).json({ msg: "Unauthorized" });
-  // }
+app.post("/products/add", async (req, res) => {
+  try {
+    // if (!req.isAuthenticated()) {
+    //   return res.status(401).json({ msg: "Unauthorized" });
+    // }
 
-  const { name, category, price, quantity, expiryDate } = req.body;
-  const username = req.user.username;
+    const { name, category, price, quantity, expiryDate } = req.body;
+    const username = req.user?.username || "guest"; // fallback if not authenticated
 
-  const newProduct = new Product({
-    name,
-    category,
-    price,
-    quantity,
-    expiryDate,
-    username,
-  });
+    const newProduct = new Product({
+      name,
+      category,
+      price,
+      quantity,
+      expiryDate,
+      username,
+    });
 
-  newProduct
-    .save()
-    .then(() => res.json({ msg: "Product added successfully" }))
-    .catch((err) => res.status(400).json({ msg: "Error: " + err }));
+    await newProduct.save();
+    res.json({ msg: "Product added successfully" });
+  } catch (err) {
+    console.error("Error adding product:", err);
+    res.status(400).json({ msg: "Error: " + err });
+  }
 });
 
-// Get all products for logged-in user (GET)
-app.get("/products", async  (req, res) =>{
-  const Allproducts=await Product.find();
-  res.json(Allproducts)
+// Get all products
+app.get("/products", async (req, res) => {
+  try {
+    const allProducts = await Product.find();
+    res.json(allProducts);
+  } catch (err) {
+    console.error("Error fetching products:", err);
+    res.status(500).json({ message: "Server error" });
+  }
 });
 
+// Get products expiring in next 7 days
 app.get("/products/expiring", async (req, res) => {
   try {
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // start of today
+    today.setHours(0, 0, 0, 0);
     const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
 
     const expiringProducts = await Product.find({
-      expiryDate: { $gt: today, $lte: nextWeek }
+      expiryDate: { $gt: today, $lte: nextWeek },
     });
 
     res.json(expiringProducts);
   } catch (err) {
-    console.error(err);
+    console.error("Error fetching expiring products:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
@@ -156,21 +178,20 @@ app.get("/products/expiring", async (req, res) => {
 app.get("/products/expired", async (req, res) => {
   try {
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // start of today
+    today.setHours(0, 0, 0, 0);
 
     const expiredProducts = await Product.find({
-      expiryDate: { $lte: today }
+      expiryDate: { $lte: today },
     });
 
     res.json(expiredProducts);
   } catch (err) {
-    console.error(err);
+    console.error("Error fetching expired products:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
 
-
-
+// Delete product by ID
 app.delete("/products/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -187,5 +208,17 @@ app.delete("/products/:id", async (req, res) => {
   }
 });
 
+// ==================== DB CONNECT & SERVER START ====================
 
-app.listen(3000, () => console.log("🚀 Server running on port 3000"));
+const PORT = process.env.PORT || 3000;
+
+mongoose
+  .connect(mongoURI)
+  .then(() => {
+    console.log("✅ Database connected");
+    app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+  })
+  .catch((err) => {
+    console.error("❌ DB Error:", err);
+    process.exit(1);
+  });
