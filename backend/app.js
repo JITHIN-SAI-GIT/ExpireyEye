@@ -7,7 +7,7 @@ const passport = require("passport");
 const LocalStrategy = require("passport-local");
 const session = require("express-session");
 const cors = require("cors");
-
+const API_BASE_URL = "https://expireyeye.onrender.com";
 const User = require("./models/User"); // passport-local-mongoose model
 const Product = require("./models/Products");
 const DashboardRoutes = require("./routes/Dashboardroutes");
@@ -34,12 +34,21 @@ if (!mongoURI) {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// CORS (frontend on port 5173)
+// const allowedOrigins = [
+//   "http://localhost:5173",                    // local frontend
+//   "https://expireyeye.onrender.com" // TODO: replace with actual frontend URL later
+// ];
+
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: function (origin, callback) {
+      // allow mobile apps / tools (no origin)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+      return callback(new Error("Not allowed by CORS"));
+    },
     methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true, // allow session cookies
+    credentials: true,
   })
 );
 
@@ -66,67 +75,80 @@ passport.deserializeUser(User.deserializeUser());
 
 // ==================== AUTH ROUTES ====================
 
+// ======================================================
+// AUTH ROUTES
+// ======================================================
+
 // Signup
 app.post("/signup", async (req, res) => {
   try {
     const { username, password, email } = req.body;
+    if (!username || !password || !email) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
     const newUser = new User({ username, email });
     await User.register(newUser, password);
-    res.send({ message: "User created successfully" });
+
+    res.json({ message: "User created successfully" });
   } catch (err) {
     console.error("Signup error:", err);
-    res.status(400).send(err);
+    res.status(400).json({ message: "Signup failed", error: err });
   }
 });
 
 // Login
 app.post("/login", passport.authenticate("local"), (req, res) => {
-  res.send({ message: "Logged in", user: req.user });
+  res.json({ message: "Logged in", user: req.user });
 });
 
 // Logout
 app.get("/logout", (req, res, next) => {
   req.logout((err) => {
     if (err) return next(err);
-    res.send({ message: "Logged out successfully" });
+    res.json({ message: "Logged out successfully" });
   });
 });
 
 // Check authentication status
 app.get("/check-auth", (req, res) => {
   if (req.isAuthenticated()) {
-    res.json({ user: req.user });
+    res.json({ authenticated: true, user: req.user });
   } else {
-    res.status(401).json({ user: null });
+    res.status(401).json({ authenticated: false, user: null });
   }
 });
 
 // Dashboard (protected)
 app.get("/dashboard", (req, res) => {
   if (req.isAuthenticated()) {
-    res.send({ message: "Welcome to the dashboard", user: req.user });
+    res.json({ message: "Welcome to the dashboard", user: req.user });
   } else {
-    res.status(401).send({ message: "You must log in first" });
+    res.status(401).json({ message: "You must log in first" });
   }
 });
 
-// ==================== EXTRA ROUTES ====================
-
+// ======================================================
+// EXTRA ROUTES
+// ======================================================
 app.use("/summary", DashboardRoutes);
 app.use("/products", productRoutes);
 app.use("/stats", Expireeryproducts);
 
-// ==================== PRODUCT ROUTES ====================
+// ======================================================
+// PRODUCT ROUTES
+// ======================================================
 
 // Add product (POST)
 app.post("/products/add", async (req, res) => {
   try {
-    // if (!req.isAuthenticated()) {
-    //   return res.status(401).json({ msg: "Unauthorized" });
-    // }
-
     const { name, category, price, quantity, expiryDate } = req.body;
-    const username = req.user?.username || "guest"; // fallback if not authenticated
+
+    if (!name || !category || !price || !quantity || !expiryDate) {
+      return res.status(400).json({ msg: "All fields are required" });
+    }
+
+    const username = req.user?.username || "guest"; // fallback if unauthenticated
 
     const newProduct = new Product({
       name,
@@ -138,10 +160,11 @@ app.post("/products/add", async (req, res) => {
     });
 
     await newProduct.save();
+
     res.json({ msg: "Product added successfully" });
   } catch (err) {
     console.error("Error adding product:", err);
-    res.status(400).json({ msg: "Error: " + err });
+    res.status(400).json({ msg: "Failed to add product", error: err });
   }
 });
 
@@ -174,7 +197,7 @@ app.get("/products/expiring", async (req, res) => {
   }
 });
 
-// Get already expired products
+// Get expired products
 app.get("/products/expired", async (req, res) => {
   try {
     const today = new Date();
@@ -201,7 +224,7 @@ app.delete("/products/:id", async (req, res) => {
       return res.status(404).json({ message: "Product not found" });
     }
 
-    res.status(200).json({ message: "Product deleted successfully" });
+    res.json({ message: "Product deleted successfully" });
   } catch (error) {
     console.error("Error deleting product:", error);
     res.status(500).json({ message: "Server error while deleting product" });
