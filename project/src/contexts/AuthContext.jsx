@@ -10,7 +10,7 @@ export const AuthProvider = ({ children }) => {
 
   // Configure axios for session cookies
   axios.defaults.withCredentials = true;
-  axios.defaults.baseURL = "https://expireyeye.onrender.com";
+  axios.defaults.baseURL = "https://expireyeye.onrender.com/";
 
   // ✅ Check session when app starts
   useEffect(() => {
