@@ -29,8 +29,8 @@ if (!mongoURI) {
 
 // IMPORTANT: Replace the FRONTEND URL after deployment:
 const allowedOrigins = [
-  "http://localhost:5173",                       // Local React dev
-  "https://YOUR-FRONTEND-URL.onrender.com",      // Replace after frontend deploy
+  "https://expireyeye.onrender.com",                       // Local React dev
+  "https://expireyeyefrontend.onrender.com",      // Replace after frontend deploy
 ];
 
 app.use(

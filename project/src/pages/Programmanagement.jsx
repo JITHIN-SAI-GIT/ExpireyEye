@@ -18,7 +18,7 @@ const ProductManagement = () => {
   // ✅ Fetch products from backend
   const fetchProducts = async () => {
     try {
-      const res = await axios.get("http://localhost:3000/products");
+      const res = await axios.get("https://expireyeye.onrender.com/products");
       setProducts(res.data);
     } catch (err) {
       console.error("Error fetching products", err);
@@ -33,7 +33,7 @@ const ProductManagement = () => {
     if (!confirmDelete) return;
 
     try {
-      await axios.delete(`http://localhost:3000/products/${id}`);
+      await axios.delete(`https://expireyeye.onrender.com/products/${id}`);
       setProducts((prev) => prev.filter((p) => p.id !== id));
       alert("Product deleted successfully ✅");
       await fetchProducts();
