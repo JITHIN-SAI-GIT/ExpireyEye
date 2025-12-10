@@ -1,4 +1,4 @@
-// src/context/AuthContext.jsx
+// src/contexts/AuthContext.jsx
 import { createContext, useContext, useEffect, useState } from "react";
 import axios from "axios";
 
@@ -8,41 +8,57 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Configure axios for session cookies
-  axios.defaults.withCredentials = true;
-  axios.defaults.baseURL = "https://expireyeye.onrender.com";
+  // Use a dedicated axios instance for auth
+  const api = axios.create({
+    baseURL: "https://expireyeye.onrender.com",
+    withCredentials: true, // send cookies on every request
+  });
 
-  // ✅ Check session when app starts
+  // Check session when app starts
   useEffect(() => {
     const checkSession = async () => {
       try {
-        const res = await axios.get("/check-auth");
-        setUser(res.data.user);
-      } catch {
+        const res = await api.get("/check-auth");
+        setUser(res.data?.user || null);
+      } catch (err) {
+        console.error("check-auth error:", err);
         setUser(null);
       } finally {
         setLoading(false);
       }
     };
+
     checkSession();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // run only on mount
 
-  // ✅ Login
+  // Login
   const login = async (username, password) => {
-    const res = await axios.post("/login", { username, password });
-    setUser(res.data.user);
-    return res.data;
+    try {
+      const res = await api.post("/login", { username, password });
+      setUser(res.data.user);
+      return res.data;
+    } catch (err) {
+      console.error("login error:", err);
+      // rethrow normalized error to be handled in UI
+      throw err.response?.data || { message: "Login failed" };
+    }
   };
 
-  // ✅ Signup
+  // Signup
   const signup = async (username, email, password) => {
-    await axios.post("/signup", { username, email, password });
+    return api.post("/signup", { username, email, password });
   };
 
-  // ✅ Logout
+  // Logout
   const logout = async () => {
-    await axios.get("/logout");
-    setUser(null);
+    try {
+      await api.get("/logout");
+    } catch (err) {
+      console.error("logout error:", err);
+    } finally {
+      setUser(null);
+    }
   };
 
   const isAuthenticated = !!user;

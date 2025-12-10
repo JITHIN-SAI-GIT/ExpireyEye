@@ -3,7 +3,7 @@ import "../styles/Login.css";
 import Logo from "../images/logo.jpg";
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function Login() {
   const [username, setUsername] = useState("");
@@ -34,12 +34,19 @@ export default function Login() {
     setSubmitting(true);
 
     try {
-      await login(username.trim(), password);
-      // On success, go to dashboard
+      const uname = username.trim();
+      if (!uname || !password) {
+        setError("Please fill in both fields.");
+        setSubmitting(false);
+        return;
+      }
+
+      await login(uname, password);
       navigate("/dashboard", { replace: true });
     } catch (err) {
       console.error("Login failed:", err);
       const msg =
+        err?.message ||
         err?.response?.data?.message ||
         "Invalid username or password. Please try again.";
       setError(msg);

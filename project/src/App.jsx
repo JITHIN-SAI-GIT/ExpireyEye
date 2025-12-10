@@ -1,36 +1,85 @@
+// src/App.jsx
+import { Route, Routes, Navigate } from "react-router-dom";
 import Dashboard from "./components/Dashboard";
 import Signup from "./pages/Signup";
 import Login from "./pages/Login";
-import { Route, Routes } from "react-router-dom";
 import Header from "./components/Header";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { useAuth } from "./context/AuthContext";
+import { useAuth } from "./contexts/AuthContext";
 import AddProductModal from "./components/Addnewproduct";
-
-import Productmanagementdashboard from "./components/Productmanagementdashboard"
+import Productmanagementdashboard from "./components/Productmanagementdashboard";
 import Analysis from "./components/Analysis";
-export default function App() {
-  const {isAuthenticated}= useAuth();
-  return (
-    // 1. Replace the React Fragment <> with a div that creates the main layout.
-    // This div will be a vertical flex container filling the whole screen.
-    <div className="flex flex-col h-screen bg-gray-900">
-      {/* 2. Your Header will be the first item, taking its natural height. */}
-      {isAuthenticated ? " " : <Header />}
 
-      {/* 3. The <main> tag will be the second item.
-             'flex-1' makes it expand to fill all remaining vertical space.
-             'overflow-y-auto' adds a scrollbar if the content inside is too long.
-      */}
-      <main className="flex-1 overflow-y-auto"> 
+function PrivateRoute({ children }) {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-full text-white">
+        Checking authentication...
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    // Not logged in → send to login page
+    return <Navigate to="/" replace />;
+  }
+
+  // Logged in → show requested page
+  return children;
+}
+
+export default function App() {
+  const { isAuthenticated } = useAuth();
+
+  return (
+    <div className="flex flex-col h-screen bg-gray-900">
+      {/* Show Header only when NOT authenticated */}
+      {isAuthenticated ? null : <Header />}
+
+      <main className="flex-1 overflow-y-auto">
         <Routes>
-          {/* Note: I removed the duplicate /dashboard route for you */}
-          <Route path="/dashboard" element={<Dashboard />} />
+          {/* Public routes */}
           <Route path="/" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
-          <Route path="/addproducts" element={<AddProductModal />} />
-          <Route path="/productmanagement" element={<Productmanagementdashboard />} />
-          <Route path="/reports" element={<Analysis/>} />
+
+          {/* Protected routes */}
+          <Route
+            path="/dashboard"
+            element={
+              <PrivateRoute>
+                <Dashboard />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/addproducts"
+            element={
+              <PrivateRoute>
+                <AddProductModal />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/productmanagement"
+            element={
+              <PrivateRoute>
+                <Productmanagementdashboard />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/reports"
+            element={
+              <PrivateRoute>
+                <Analysis />
+              </PrivateRoute>
+            }
+          />
+
+          {/* Fallback: anything unknown → go to login */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
     </div>
