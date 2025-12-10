@@ -4,9 +4,9 @@ import Login from "./pages/Login";
 import { Route, Routes } from "react-router-dom";
 import Header from "./components/Header";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { useAuth } from "./contexts/AuthContext";
+import { useAuth } from "./context/AuthContext";
 import AddProductModal from "./components/Addnewproduct";
-import AnalyticsDashboard from "./pages/AnalyticsDashboard";
+
 import Productmanagementdashboard from "./components/Productmanagementdashboard"
 import Analysis from "./components/Analysis";
 export default function App() {
