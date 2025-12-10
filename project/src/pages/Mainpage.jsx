@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 
 import Navbar from "./Navbar";
-import KpiCard from "./KpiCard";
 import Chats from "./Chats";
 import UrgentItemsTable from "./Urgentitems";
 import AddProductModal from "../components/Addnewproduct";
