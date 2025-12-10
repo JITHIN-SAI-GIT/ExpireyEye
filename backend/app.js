@@ -16,6 +16,9 @@ const Expireeryproducts = require("./routes/ExpieryProducts");
 
 const app = express();
 
+// Trust proxy (needed for correct secure cookies on Render)
+app.set("trust proxy", 1);
+
 // ==================== DATABASE CONFIG ====================
 
 const mongoURI = process.env.ATLAS_URL;
@@ -27,23 +30,37 @@ if (!mongoURI) {
 
 // ==================== CORS CONFIG ====================
 
-// IMPORTANT: Replace the FRONTEND URL after deployment:
+// FRONTEND origins that can call this API
 const allowedOrigins = [
-  "https://expireyeye.onrender.com",                       // Local React dev
-  "https://expireyeyefrontend.onrender.com",      // Replace after frontend deploy
+  "http://localhost:5173",                    // Local Vite dev
+  "https://expireyeyefrontend.onrender.com",  // Deployed frontend
+  // If you call the API from other tools, add them here
 ];
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin) return callback(null, true); // mobile / postman
-      if (allowedOrigins.includes(origin)) return callback(null, true);
+      // Allow non-browser clients (Postman, curl, mobile apps)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
       return callback(new Error("Not allowed by CORS: " + origin));
     },
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,
   })
 );
+
+// Optional CORS error handler (so the server does not crash)
+app.use((err, req, res, next) => {
+  if (err && err.message && err.message.startsWith("Not allowed by CORS")) {
+    return res.status(403).json({ message: err.message });
+  }
+  next(err);
+});
 
 // ==================== MIDDLEWARE ====================
 
@@ -56,9 +73,12 @@ app.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: false,
       httpOnly: true,
       maxAge: 1000 * 60 * 60 * 24, // 1 day
+      // For local HTTP dev: secure = false, sameSite = "lax"
+      // For Render HTTPS: secure = true, sameSite = "none"
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     },
   })
 );
@@ -78,6 +98,7 @@ passport.deserializeUser(User.deserializeUser());
 app.post("/signup", async (req, res) => {
   try {
     const { username, password, email } = req.body;
+
     if (!username || !password || !email) {
       return res.status(400).json({ message: "All fields required" });
     }
@@ -87,12 +108,14 @@ app.post("/signup", async (req, res) => {
 
     res.json({ message: "User created successfully" });
   } catch (err) {
+    console.error("Signup error:", err);
     res.status(400).json({ message: "Signup failed", error: err });
   }
 });
 
 // Login
 app.post("/login", passport.authenticate("local"), (req, res) => {
+  // If we are here, login succeeded and req.user is set
   res.json({ message: "Logged in", user: req.user });
 });
 
@@ -104,7 +127,7 @@ app.get("/logout", (req, res, next) => {
   });
 });
 
-// Check auth
+// Check auth (used by frontend /check-auth)
 app.get("/check-auth", (req, res) => {
   if (req.isAuthenticated()) {
     return res.json({ authenticated: true, user: req.user });
@@ -112,11 +135,11 @@ app.get("/check-auth", (req, res) => {
   res.status(401).json({ authenticated: false });
 });
 
-// Protected dashboard
+// Protected dashboard (for testing from Postman)
 app.get("/dashboard", (req, res) => {
-  if (req.isAuthenticated())
+  if (req.isAuthenticated()) {
     return res.json({ message: "Welcome to dashboard", user: req.user });
-
+  }
   res.status(401).json({ message: "You must log in first" });
 });
 
@@ -153,6 +176,7 @@ app.post("/products/add", async (req, res) => {
     await newProduct.save();
     res.json({ msg: "Product added successfully" });
   } catch (err) {
+    console.error("Add product error:", err);
     res.status(400).json({ msg: "Failed to add product", error: err });
   }
 });
@@ -163,6 +187,7 @@ app.get("/products", async (req, res) => {
     const items = await Product.find();
     res.json(items);
   } catch (err) {
+    console.error("Get products error:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
@@ -173,16 +198,15 @@ app.get("/products/expiring", async (req, res) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const nextWeek = new Date(
-      today.getTime() + 7 * 24 * 60 * 60 * 1000
-    );
+    const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
 
     const expiring = await Product.find({
       expiryDate: { $gt: today, $lte: nextWeek },
     });
 
     res.json(expiring);
-  } catch {
+  } catch (err) {
+    console.error("Get expiring products error:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
@@ -198,21 +222,24 @@ app.get("/products/expired", async (req, res) => {
     });
 
     res.json(expired);
-  } catch {
+  } catch (err) {
+    console.error("Get expired products error:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
 
-// Delete
+// Delete product
 app.delete("/products/:id", async (req, res) => {
   try {
     const deleted = await Product.findByIdAndDelete(req.params.id);
 
-    if (!deleted)
+    if (!deleted) {
       return res.status(404).json({ message: "Product not found" });
+    }
 
     res.json({ message: "Product deleted successfully" });
-  } catch {
+  } catch (err) {
+    console.error("Delete product error:", err);
     res.status(500).json({ message: "Error deleting product" });
   }
 });
