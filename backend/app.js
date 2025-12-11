@@ -27,9 +27,7 @@ if (!connectURL) {
 
 // ==================== CORS CONFIG ====================
 
-const allowedOrigins = [
-  "https://expireyeyefrontend.onrender.com",
-];
+const allowedOrigins = ["https://expireyeyefrontend.onrender.com"];
 
 app.use(
   cors({
@@ -57,7 +55,8 @@ app.use(
     cookie: {
       secure: false,
       httpOnly: true,
-       sameSite: "none", // REQUIRED for cross-site cookies
+      secure: process.env.NODE_ENV === "production", // true in production
+      sameSite: "none", // REQUIRED for cross-site cookies
       maxAge: 1000 * 60 * 60 * 24, // 1 day
     },
   })
@@ -85,7 +84,6 @@ app.post("/signup", async (req, res) => {
 
     const newUser = new User({ username, email });
     await User.register(newUser, password);
-
     res.json({ message: "User created successfully" });
   } catch (err) {
     res.status(400).json({ message: "Signup failed", error: err });
@@ -93,7 +91,7 @@ app.post("/signup", async (req, res) => {
 });
 
 // Login
-app.post("/login", passport.authenticate("local"), (req, res) => {
+app.post("/login", passport.authenticate("local"), async (req, res) => {
   res.json({ message: "Logged in", user: req.user });
 });
 
@@ -227,9 +225,7 @@ mongoose
   .connect(connectURL)
   .then(() => {
     console.log("✅ Database connected");
-    app.listen(PORT, () =>
-      console.log(`🚀 Server running on port ${PORT}`)
-    );
+    app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
   })
   .catch((err) => {
     console.error("❌ DB Error:", err);
