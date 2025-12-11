@@ -9,7 +9,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   // Use a dedicated axios instance for auth
-  const api = axios.create({
+  const api = axios.post({
     baseURL: "https://expireyeye.onrender.com",
     withCredentials: true, // send cookies on every request
   });
@@ -18,7 +18,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const checkSession = async () => {
       try {
-        const res = await api.get("/check-auth");
+        const res = await axios.get("https://expireyeye.onrender.com/check-auth",{withCredentials: true});
         setUser(res.data?.user || null);
       } catch (err) {
         console.error("check-auth error:", err);
@@ -35,7 +35,7 @@ export const AuthProvider = ({ children }) => {
   // Login
   const login = async (username, password) => {
     try {
-      const res = await api.post("/login", { username, password });
+      const res = await axios.post("https://expireyeye.onrender.com/login", {withCredentials: true},{ username, password });
       setUser(res.data.user);
       return res.data;
     } catch (err) {
@@ -47,13 +47,13 @@ export const AuthProvider = ({ children }) => {
 
   // Signup
   const signup = async (username, email, password) => {
-    return api.post("/signup", { username, email, password });
+    return axios.post("https://expireyeye.onrender.com/signup",{withCredentials: true}, { username, email, password });
   };
 
   // Logout
   const logout = async () => {
     try {
-      await api.get("/logout");
+      await axios.get("https://expireyeye.onrender.com/logout",{withCredentials: true});
     } catch (err) {
       console.error("logout error:", err);
     } finally {
