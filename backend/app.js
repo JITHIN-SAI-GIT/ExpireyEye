@@ -27,7 +27,9 @@ if (!connectURL) {
 
 // ==================== CORS CONFIG ====================
 
-const allowedOrigins = ["https://expireyeyefrontend.onrender.com"];
+const allowedOrigins = [
+  "http://localhost:5173/",
+  "https://expireyeyefrontend.onrender.com"];
 
 app.use(
   cors({
