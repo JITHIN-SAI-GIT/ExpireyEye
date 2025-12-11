@@ -28,7 +28,6 @@ if (!connectURL) {
 // ==================== CORS CONFIG ====================
 
 const allowedOrigins = [
-  "https://expireyeye.onrender.com",
   "https://expireyeyefrontend.onrender.com",
 ];
 
@@ -58,6 +57,7 @@ app.use(
     cookie: {
       secure: false,
       httpOnly: true,
+       sameSite: "none", // REQUIRED for cross-site cookies
       maxAge: 1000 * 60 * 60 * 24, // 1 day
     },
   })
