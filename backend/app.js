@@ -91,9 +91,30 @@ app.post("/signup", async (req, res) => {
 });
 
 // Login
-app.post("/login", passport.authenticate("local"), async (req, res) => {
-  res.json({ message: "Logged in", user: req.user });
+// Login (robust)
+app.post("/login", (req, res, next) => {
+  passport.authenticate("local", (err, user, info) => {
+    if (err) return next(err);
+    if (!user) {
+      // authentication failed (bad credentials)
+      return res.status(401).json({ message: info?.message || "Invalid credentials" });
+    }
+    // Log the user in and create session
+    req.logIn(user, (err) => {
+      if (err) return next(err);
+      // optional: explicitly save session to ensure cookie is sent immediately
+      req.session.save((err) => {
+        if (err) {
+          console.error("session save error:", err);
+          return res.status(500).json({ message: "Session save failed" });
+        }
+        // Successful login — passport sets req.user
+        return res.json({ message: "Logged in", user: req.user });
+      });
+    });
+  })(req, res, next);
 });
+
 
 // Logout
 app.get("/logout", (req, res, next) => {
