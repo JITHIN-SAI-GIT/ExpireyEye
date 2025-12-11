@@ -16,50 +16,34 @@ const Expireeryproducts = require("./routes/ExpieryProducts");
 
 const app = express();
 
-// Trust proxy (Render / any reverse proxy) - REQUIRED for secure cookies
-app.set("trust proxy", 1);
-
 // ==================== DATABASE CONFIG ====================
 
-const mongoURI = process.env.ATLAS_URL;
+const connectURL = process.env.ATLAS_URL;
 
-if (!mongoURI) {
+if (!connectURL) {
   console.error("❌ ATLAS_URL is NOT defined in .env");
   process.exit(1);
 }
 
 // ==================== CORS CONFIG ====================
 
-// Frontend origins that are allowed to call this API
 const allowedOrigins = [
-  "http://localhost:5173",                    // Local Vite dev
-  "https://expireyeyefrontend.onrender.com",  // Deployed frontend
+  "https://expireyeye.onrender.com",
+  "https://expireyeyefrontend.onrender.com",
 ];
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Allow non-browser tools (Postman, curl) without Origin
       if (!origin) return callback(null, true);
-
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
+      if (allowedOrigins.includes(origin)) return callback(null, true);
 
       return callback(new Error("Not allowed by CORS: " + origin));
     },
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    credentials: true, // allow cookies
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
   })
 );
-
-// Optional: clean CORS error response instead of crashing
-app.use((err, req, res, next) => {
-  if (err && err.message && err.message.startsWith("Not allowed by CORS")) {
-    return res.status(403).json({ message: err.message });
-  }
-  next(err);
-});
 
 // ==================== MIDDLEWARE ====================
 
@@ -72,13 +56,9 @@ app.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
+      secure: false,
       httpOnly: true,
       maxAge: 1000 * 60 * 60 * 24, // 1 day
-      // IMPORTANT for Render (HTTPS, cross-domain with frontend):
-      // - In production: secure cookie + SameSite=None (so browser sends cookie)
-      // - In dev: non-secure, SameSite=Lax (localhost)
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     },
   })
 );
@@ -98,6 +78,7 @@ passport.deserializeUser(User.deserializeUser());
 app.post("/signup", async (req, res) => {
   try {
     const { username, password, email } = req.body;
+
     if (!username || !password || !email) {
       return res.status(400).json({ message: "All fields required" });
     }
@@ -107,33 +88,13 @@ app.post("/signup", async (req, res) => {
 
     res.json({ message: "User created successfully" });
   } catch (err) {
-    console.error("Signup error:", err);
     res.status(400).json({ message: "Signup failed", error: err });
   }
 });
 
 // Login
-app.post("/login", (req, res, next) => {
-  passport.authenticate("local", (err, user, info) => {
-    if (err) {
-      console.error("Login error:", err);
-      return res.status(500).json({ message: "Server error" });
-    }
-    if (!user) {
-      return res.status(401).json({ message: "Invalid username or password" });
-    }
-
-    req.logIn(user, (err) => {
-      if (err) {
-        console.error("req.logIn error:", err);
-        return res.status(500).json({ message: "Login failed" });
-      }
-
-      // At this point, session cookie should be set
-      console.log("✅ Login success for:", user.username);
-      return res.json({ message: "Logged in", user });
-    });
-  })(req, res, next);
+app.post("/login", passport.authenticate("local"), (req, res) => {
+  res.json({ message: "Logged in", user: req.user });
 });
 
 // Logout
@@ -146,7 +107,6 @@ app.get("/logout", (req, res, next) => {
 
 // Check auth
 app.get("/check-auth", (req, res) => {
-  console.log("🔎 /check-auth isAuthenticated:", req.isAuthenticated());
   if (req.isAuthenticated()) {
     return res.json({ authenticated: true, user: req.user });
   }
@@ -156,8 +116,12 @@ app.get("/check-auth", (req, res) => {
 // Protected dashboard
 app.get("/dashboard", (req, res) => {
   if (req.isAuthenticated()) {
-    return res.json({ message: "Welcome to dashboard", user: req.user });
+    return res.json({
+      message: "Welcome to dashboard",
+      user: req.user,
+    });
   }
+
   res.status(401).json({ message: "You must log in first" });
 });
 
@@ -167,7 +131,7 @@ app.use("/summary", DashboardRoutes);
 app.use("/products", productRoutes);
 app.use("/stats", Expireeryproducts);
 
-// ==================== PRODUCT ROUTES (basic CRUD) ====================
+// ==================== PRODUCT ROUTES ====================
 
 // Add a product
 app.post("/products/add", async (req, res) => {
@@ -175,9 +139,7 @@ app.post("/products/add", async (req, res) => {
     const { name, category, price, quantity, expiryDate } = req.body;
 
     if (!name || !category || !price || !quantity || !expiryDate) {
-      return res
-        .status(400)
-        .json({ msg: "All product fields are required" });
+      return res.status(400).json({ msg: "All product fields are required" });
     }
 
     const username = req.user?.username || "guest";
@@ -194,7 +156,6 @@ app.post("/products/add", async (req, res) => {
     await newProduct.save();
     res.json({ msg: "Product added successfully" });
   } catch (err) {
-    console.error("Add product error:", err);
     res.status(400).json({ msg: "Failed to add product", error: err });
   }
 });
@@ -204,8 +165,7 @@ app.get("/products", async (req, res) => {
   try {
     const items = await Product.find();
     res.json(items);
-  } catch (err) {
-    console.error("Get products error:", err);
+  } catch {
     res.status(500).json({ message: "Server error" });
   }
 });
@@ -214,7 +174,7 @@ app.get("/products", async (req, res) => {
 app.get("/products/expiring", async (req, res) => {
   try {
     const today = new Date();
-  today.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
 
     const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
 
@@ -223,8 +183,7 @@ app.get("/products/expiring", async (req, res) => {
     });
 
     res.json(expiring);
-  } catch (err) {
-    console.error("Get expiring products error:", err);
+  } catch {
     res.status(500).json({ message: "Server error" });
   }
 });
@@ -240,23 +199,22 @@ app.get("/products/expired", async (req, res) => {
     });
 
     res.json(expired);
-  } catch (err) {
-    console.error("Get expired products error:", err);
+  } catch {
     res.status(500).json({ message: "Server error" });
   }
 });
 
-// Delete
+// Delete product
 app.delete("/products/:id", async (req, res) => {
   try {
     const deleted = await Product.findByIdAndDelete(req.params.id);
 
-    if (!deleted)
+    if (!deleted) {
       return res.status(404).json({ message: "Product not found" });
+    }
 
     res.json({ message: "Product deleted successfully" });
-  } catch (err) {
-    console.error("Delete product error:", err);
+  } catch {
     res.status(500).json({ message: "Error deleting product" });
   }
 });
@@ -266,7 +224,7 @@ app.delete("/products/:id", async (req, res) => {
 const PORT = process.env.PORT || 3000;
 
 mongoose
-  .connect(mongoURI)
+  .connect(connectURL)
   .then(() => {
     console.log("✅ Database connected");
     app.listen(PORT, () =>
