@@ -28,8 +28,8 @@ if (!connectURL) {
 // ==================== CORS CONFIG ====================
 
 const allowedOrigins = [
-  "http://localhost:5173/",
-  "https://expireyeyefrontend.onrender.com"];
+  "http://localhost:5173",
+  ];
 
 app.use(
   cors({
@@ -83,7 +83,6 @@ app.post("/signup", async (req, res) => {
     if (!username || !password || !email) {
       return res.status(400).json({ message: "All fields required" });
     }
-
     const newUser = new User({ username, email });
     await User.register(newUser, password);
     res.json({ message: "User created successfully" });
@@ -224,7 +223,7 @@ app.delete("/products/:id", async (req, res) => {
 const PORT = process.env.PORT || 3000;
 
 mongoose
-  .connect(connectURL)
+  .connect("mongodb://127.0.0.1:27017/ExpireyEye")
   .then(() => {
     console.log("✅ Database connected");
     app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));

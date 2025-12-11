@@ -9,16 +9,16 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   // Use a dedicated axios instance for auth
-  const api = axios.post({
-    baseURL: "https://expireyeye.onrender.com",
-    withCredentials: true, // send cookies on every request
-  });
+  // const api = axios.post({
+  //   baseURL: "http://localhost:5173",
+  //   withCredentials: true, // send cookies on every request
+  // });
 
   // Check session when app starts
   useEffect(() => {
     const checkSession = async () => {
       try {
-        const res = await axios.get("https://expireyeye.onrender.com/check-auth",{withCredentials: true});
+        const res = await axios.get("http://localhost:5173/check-auth",{withCredentials: true});
         setUser(res.data?.user || null);
       } catch (err) {
         console.error("check-auth error:", err);
@@ -35,7 +35,7 @@ export const AuthProvider = ({ children }) => {
   // Login
   const login = async (username, password) => {
     try {
-      const res = await axios.post("https://expireyeye.onrender.com/login", {withCredentials: true},{ username, password });
+      const res = await axios.post("http://localhost:5173/login", {withCredentials: true},{ username, password });
       setUser(res.data.user);
       return res.data;
     } catch (err) {
@@ -47,13 +47,13 @@ export const AuthProvider = ({ children }) => {
 
   // Signup
   const signup = async (username, email, password) => {
-    return axios.post("https://expireyeye.onrender.com/signup",{withCredentials: true}, { username, email, password });
+    return axios.post("http://localhost:5173/signup",{withCredentials: true}, { username, email, password });
   };
 
   // Logout
   const logout = async () => {
     try {
-      await axios.get("https://expireyeye.onrender.com/logout",{withCredentials: true});
+      await axios.get("http://localhost:5173/logout",{withCredentials: true});
     } catch (err) {
       console.error("logout error:", err);
     } finally {

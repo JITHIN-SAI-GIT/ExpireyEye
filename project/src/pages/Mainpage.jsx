@@ -19,13 +19,13 @@ function MainContent() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const allRes = await axios.get("https://expireyeye.onrender.com/products");
+        const allRes = await axios.get("http://localhost:5173/products");
         setProducts(allRes.data);
 
-        const expiringRes = await axios.get("https://expireyeye.onrender.com/products/expiring");
+        const expiringRes = await axios.get("http://localhost:5173/products/expiring");
         setExpiringProducts(expiringRes.data);
 
-        const expiredRes = await axios.get("https://expireyeye.onrender.com/products/expired");
+        const expiredRes = await axios.get("http://localhost:5173/products/expired");
         setExpiredProducts(expiredRes.data);
       } catch (err) {
         console.error("Error fetching product data:", err);

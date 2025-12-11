@@ -32,7 +32,7 @@ const AddNewProduct = ({ onClose, onProductAdded }) => {
 
     try {
       const response = await axios.post(
-        "https://expireyeye.onrender.com/products/add",
+        "http://localhost:5173/products/add",
         formData,
         { 
            withCredentials: true,

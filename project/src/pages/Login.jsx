@@ -40,7 +40,6 @@ export default function Login() {
         setSubmitting(false);
         return;
       }
-
       await login(uname, password);
       navigate("/dashboard", { replace: true });
     } catch (err) {

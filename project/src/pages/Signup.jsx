@@ -17,7 +17,7 @@ export default function Signup() {
 
     try {
       await axios.post(
-        "https://expireyeye.onrender.com/signup",
+        "http://localhost:3000/signup",
         { username, password, email },
         { withCredentials: true }
       );
