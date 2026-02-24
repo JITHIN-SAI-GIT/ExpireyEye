@@ -1,9 +1,8 @@
-import { Navbar, Container, Form, Button } from "react-bootstrap";
-import logo from "../images/fulllogo.jpg";
 import { Link, useNavigate } from "react-router-dom";
-import "../styles/header.css";
-import "bootstrap/dist/css/bootstrap.min.css";
-import { useAuth } from "../contexts/AuthContext"; // ✅ correct path
+import { useAuth } from "../contexts/AuthContext";
+import logo from "../images/fulllogo.jpg";
+import { Button } from "./ui/Button"; // Use new Button
+import { motion } from "framer-motion";
 
 export default function Header() {
   const { user, logout, isAuthenticated } = useAuth();
@@ -14,63 +13,67 @@ export default function Header() {
     navigate("/");
   };
 
-  const handleProtectedNav = (path) => {
-    if (isAuthenticated) navigate(path);
-    else navigate("/");
-  };
-
   return (
-    <Navbar
-      expand="lg"
-      fixed="top"
-      className="shadow-sm py-3 navbar-gradient"
-      collapseOnSelect
+    <motion.header
+      initial={{ y: -100 }}
+      animate={{ y: 0 }}
+      className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md shadow-sm border-b border-slate-100"
     >
-      <Container className="d-flex align-items-center justify-content-between">
-        <Navbar.Brand>
+      <div className="container mx-auto px-6 py-3 flex items-center justify-between">
+        {/* Logo */}
+        <Link to="/" className="flex items-center gap-3 group">
           <img
             src={logo}
             alt="Logo"
-            style={{ height: 50, borderRadius: 10, cursor: "pointer" }}
-            onClick={() => handleProtectedNav("/dashboard")}
+            className="h-10 w-auto rounded-lg shadow-sm group-hover:scale-105 transition-transform"
           />
-        </Navbar.Brand>
-        <div className="d-flex align-items-center">
+          <span className="hidden md:block text-xl font-heading font-bold text-slate-800 tracking-tight">
+            Expiry<span className="text-primary">Eye</span>
+          </span>
+        </Link>
+
+        {/* Navigation / Actions */}
+        <div className="flex items-center gap-4">
           {isAuthenticated && (
-            <span
-              className="me-3 text-white"
-              style={{ cursor: "pointer" }}
-              onClick={() => handleProtectedNav("/alerts")}
+            <Link
+              to="/alerts"
+              className="text-slate-600 hover:text-orange-500 transition-colors bg-slate-100 p-2 rounded-full"
             >
               <i className="fa-solid fa-triangle-exclamation fa-lg"></i>
-            </span>
+            </Link>
           )}
-          {/* here performing the terenary operator */}
+
           {isAuthenticated ? (
-            <>
-              <span className="me-3 text-white">
-                Hi, {user?.username || "User"}
+            <div className="flex items-center gap-4">
+              <span className="hidden sm:block text-sm font-medium text-slate-600">
+                Hi, <span className="text-slate-900">{user?.username || "User"}</span>
               </span>
               <Button
-                variant="link"
+                variant="ghost"
+                size="sm"
                 onClick={handleLogout}
-                className="text-dark"
               >
                 Logout
               </Button>
-            </>
+              <Button
+                variant="primary"
+                onClick={() => navigate("/dashboard")}
+              >
+                Dashboard
+              </Button>
+            </div>
           ) : (
-            <>
-              <Link to="/" className="me-3 text-white">
-                <b>Login</b>
+            <div className="flex items-center gap-2">
+              <Link to="/">
+                <Button variant="ghost">Login</Button>
               </Link>
-              <Link to="/signup" className="me-4 text-white">
-                <b>Signup</b>
+              <Link to="/signup">
+                <Button variant="primary">Get Started</Button>
               </Link>
-            </>
-          )}  
+            </div>
+          )}
         </div>
-      </Container>
-    </Navbar>
+      </div>
+    </motion.header>
   );
 }

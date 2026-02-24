@@ -1,1 +1,4 @@
-// export const API_BASE_URL = "https://expireyeye.onrender.com";
+// export const apiClient = axios.create({
+//   baseURL: 'http://localhost:3000/api', // Use localhost for dev
+//   withCredentials: true,
+// });

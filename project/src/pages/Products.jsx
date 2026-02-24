@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
 import { mockProducts } from '../data/mockData';
 import { Search, Plus, CreditCard as Edit, Trash2, AlertTriangle, Calendar, Package } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const Products = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
+  const navigate = useNavigate();
 
   const categories = ['all', ...new Set(mockProducts.map(p => p.category))];
 
   const filteredProducts = mockProducts.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         product.category.toLowerCase().includes(searchTerm.toLowerCase());
+      product.category.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = filterCategory === 'all' || product.category === filterCategory;
     return matchesSearch && matchesCategory;
   });
@@ -41,7 +43,10 @@ const Products = () => {
             <h1 className="text-3xl font-bold text-gray-900 mb-2">ℙ𝕣𝕠𝕕𝕦𝕔𝕥 𝕄𝕒𝕟𝕒𝕘𝕖𝕞𝕖𝕟𝕥</h1>
             <p className="text-gray-600">Manage your inventory and track product expiration dates</p>
           </div>
-          <button className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2">
+          <button
+            onClick={() => navigate('/addproducts')}
+            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2"
+          >
             <Plus className="h-5 w-5" />
             <span>Add Product</span>
           </button>
@@ -92,10 +97,10 @@ const Products = () => {
                   </button>
                 </div>
               </div>
-              
+
               <h3 className="text-lg font-semibold text-gray-900 mb-1">{product.name}</h3>
               <p className="text-sm text-gray-500 mb-3">{product.category}</p>
-              
+
               <div className="space-y-2 mb-4">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Price:</span>

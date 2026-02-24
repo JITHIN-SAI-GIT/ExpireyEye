@@ -1,10 +1,9 @@
 // ==================== ENV & DEPENDENCIES ====================
 require("dotenv").config();
-
 const express = require("express");
 const mongoose = require("mongoose");
 const passport = require("passport");
-const LocalStrategy = require("passport-local");
+const LocalStrategy = require("passport-local").Strategy;
 const session = require("express-session");
 const cors = require("cors");
 
@@ -12,24 +11,24 @@ const User = require("./models/User");
 const Product = require("./models/Products");
 const DashboardRoutes = require("./routes/Dashboardroutes");
 const productRoutes = require("./routes/productRoutes");
-const Expireeryproducts = require("./routes/ExpieryProducts");
+const Expireeryproducts = require("./routes/ExpiryProducts");
 
 const app = express();
 
 // ==================== DATABASE CONFIG ====================
 
 const connectURL = process.env.ATLAS_URL;
+console.log("Checking ATLAS_URL...");
 
 if (!connectURL) {
   console.error("❌ ATLAS_URL is NOT defined in .env");
   process.exit(1);
 }
+console.log("ATLAS_URL is defined.");
 
 // ==================== CORS CONFIG ====================
 
-const allowedOrigins = [
-  "http://localhost:5173",
-  ];
+const allowedOrigins = ["http://localhost:5173", "http://localhost:3000"];
 
 app.use(
   cors({
@@ -48,21 +47,22 @@ app.use(
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use("/public", express.static("public")); // Serve static files
 
-app.use(
-  session({
-    secret: process.env.SECRET,
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      secure: false,
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // true in production
-      sameSite: "none", // REQUIRED for cross-site cookies
-      maxAge: 1000 * 60 * 60 * 24, // 1 day
-    },
-  })
-);
+app.set("trust proxy", 1); // REQUIRED when using cookies across ports
+
+
+app.use(session({
+  secret: process.env.SECRET || "fallback_secret",
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: false,
+    sameSite: "lax",
+    httpOnly: true,
+    maxAge: 1000 * 60 * 60 * 24 // 1 day
+  }
+}));
 
 // ==================== PASSPORT ====================
 
@@ -80,6 +80,8 @@ app.post("/signup", async (req, res) => {
   try {
     const { username, password, email } = req.body;
 
+    console.log(username,password,email)
+
     if (!username || !password || !email) {
       return res.status(400).json({ message: "All fields required" });
     }
@@ -91,9 +93,26 @@ app.post("/signup", async (req, res) => {
   }
 });
 
-// Login
-app.post("/login", passport.authenticate("local"), async (req, res) => {
-  res.json({ message: "Logged in", user: req.user });
+app.post("/login", (req, res, next) => {
+  console.log(`[LOGIN ATTEMPT] Username: ${req.body.username}`);
+  passport.authenticate("local", (err, user, info) => {
+    if (err) {
+      console.error("[LOGIN ERROR] Server error:", err);
+      return res.status(500).json({ message: "Server error", error: err });
+    }
+    if (!user) {
+      console.warn("[LOGIN FAILED] Invalid credentials:", info);
+      return res.status(401).json({ message: "Invalid username or password" });
+    }
+    req.logIn(user, (err) => {
+      if (err) {
+        console.error("[LOGIN SESSION ERROR] Req.logIn failed:", err);
+        return res.status(500).json({ message: "Session login failed", error: err });
+      }
+      console.log(`[LOGIN SUCCESS] User: ${user.username}`);
+      return res.json({ message: "Logged in", user });
+    });
+  })(req, res, next);
 });
 
 // Logout
@@ -129,101 +148,18 @@ app.get("/dashboard", (req, res) => {
 app.use("/summary", DashboardRoutes);
 app.use("/products", productRoutes);
 app.use("/stats", Expireeryproducts);
+app.use("/orders", require("./routes/orders"));
+app.use("/ml", require("./routes/mlRoutes"));
+app.use("/marketing", require("./routes/marketingRoutes"));
+app.use("/chat", require("./routes/chatRoutes"));
 
-// ==================== PRODUCT ROUTES ====================
-
-// Add a product
-app.post("/products/add", async (req, res) => {
-  try {
-    const { name, category, price, quantity, expiryDate } = req.body;
-
-    if (!name || !category || !price || !quantity || !expiryDate) {
-      return res.status(400).json({ msg: "All product fields are required" });
-    }
-
-    const username = req.user?.username || "guest";
-
-    const newProduct = new Product({
-      name,
-      category,
-      price,
-      quantity,
-      expiryDate,
-      username,
-    });
-
-    await newProduct.save();
-    res.json({ msg: "Product added successfully" });
-  } catch (err) {
-    res.status(400).json({ msg: "Failed to add product", error: err });
-  }
-});
-
-// Get all products
-app.get("/products", async (req, res) => {
-  try {
-    const items = await Product.find();
-    res.json(items);
-  } catch {
-    res.status(500).json({ message: "Server error" });
-  }
-});
-
-// Products expiring soon
-app.get("/products/expiring", async (req, res) => {
-  try {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
-
-    const expiring = await Product.find({
-      expiryDate: { $gt: today, $lte: nextWeek },
-    });
-
-    res.json(expiring);
-  } catch {
-    res.status(500).json({ message: "Server error" });
-  }
-});
-
-// Get expired items
-app.get("/products/expired", async (req, res) => {
-  try {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const expired = await Product.find({
-      expiryDate: { $lte: today },
-    });
-
-    res.json(expired);
-  } catch {
-    res.status(500).json({ message: "Server error" });
-  }
-});
-
-// Delete product
-app.delete("/products/:id", async (req, res) => {
-  try {
-    const deleted = await Product.findByIdAndDelete(req.params.id);
-
-    if (!deleted) {
-      return res.status(404).json({ message: "Product not found" });
-    }
-
-    res.json({ message: "Product deleted successfully" });
-  } catch {
-    res.status(500).json({ message: "Error deleting product" });
-  }
-});
 
 // ==================== START SERVER ====================
 
 const PORT = process.env.PORT || 3000;
 
 mongoose
-  .connect("mongodb://127.0.0.1:27017/ExpireyEye")
+  .connect(connectURL)
   .then(() => {
     console.log("✅ Database connected");
     app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));

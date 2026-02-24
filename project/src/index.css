@@ -1,8 +1,77 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-.nav{
-    background-color:rgb(17, 151, 17);
+@layer base {
+  :root {
+    --primary: 34 197 94; /* green-500 */
+    --secondary: 250 204 21; /* yellow-400 */
+    --background: 248 250 252; /* slate-50 */
+    --foreground: 15 23 42; /* slate-900 */
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-slate-800 font-sans antialiased overflow-x-hidden;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading tracking-tight text-slate-900;
+  }
 }
 
+@layer components {
+    .glass-panel {
+        @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-glass rounded-2xl;
+    }
+    
+    .glass-card {
+        @apply bg-white/80 backdrop-blur-sm border border-slate-100 shadow-soft rounded-xl transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+    }
+
+    .btn-primary {
+        @apply bg-primary hover:bg-primary-dark text-white shadow-lg shadow-primary/30 active:scale-95 transition-all duration-200 rounded-lg font-medium px-4 py-2 flex items-center justify-center gap-2;
+    }
+
+    .btn-secondary {
+        @apply bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-sm active:scale-95 transition-all duration-200 rounded-lg font-medium px-4 py-2 flex items-center justify-center gap-2;
+    }
+
+    .btn-icon {
+        @apply p-2 rounded-full hover:bg-slate-100 active:scale-90 transition-all duration-200 text-slate-600;
+    }
+
+    .input-field {
+        @apply w-full px-4 py-2 rounded-lg border border-slate-200 bg-white/50 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200;
+    }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+    
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-slate-300 rounded-full hover:bg-slate-400 transition-colors;
+  }
+
+  .text-gradient-primary {
+      @apply bg-clip-text text-transparent bg-gradient-to-r from-primary-dark to-primary;
+  }
+}

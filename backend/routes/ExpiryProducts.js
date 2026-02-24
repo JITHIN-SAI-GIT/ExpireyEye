@@ -4,6 +4,8 @@ const router = express.Router();
 const axios = require("axios");
 
 
+const Product = require("../models/Products");
+
 router.get("/stats", async (req, res) => {
   try {
     const today = new Date();

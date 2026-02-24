@@ -1,9 +1,12 @@
-// src/pages/Login.jsx
-import "../styles/Login.css";
-import Logo from "../images/logo.jpg";
-import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { motion, AnimatePresence } from "framer-motion";
+import { FaUser, FaLock, FaSpinner, FaArrowRight } from "react-icons/fa";
+import { Button } from "../components/ui/Button";
+import { Input } from "../components/ui/Input";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card";
+import Logo from "../images/logo.jpg";
 
 export default function Login() {
   const [username, setUsername] = useState("");
@@ -24,107 +27,151 @@ export default function Login() {
 
   // Auto-hide intro video after 5 seconds
   useEffect(() => {
-    const timer = setTimeout(() => setShowVideo(false), 5000);
+    const timer = setTimeout(() => setShowVideo(false), 4500);
     return () => clearTimeout(timer);
   }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setError("");
+    setError('');
     setSubmitting(true);
 
     try {
-      const uname = username.trim();
-      if (!uname || !password) {
-        setError("Please fill in both fields.");
-        setSubmitting(false);
-        return;
-      }
-      await login(uname, password);
-      navigate("/dashboard", { replace: true });
+      await login({ username, password });
+      navigate("/dashboard");
     } catch (err) {
       console.error("Login failed:", err);
-      const msg =
-        err?.message ||
-        err?.response?.data?.message ||
-        "Invalid username or password. Please try again.";
-      setError(msg);
+      setError(err.response?.data?.message || "Invalid credentials. Please try again.");
     } finally {
       setSubmitting(false);
     }
   };
 
-  // While /check-auth is running
   if (loading) {
     return (
-      <div className="login-background">
-        <div className="login-container">
-          <p>Checking session...</p>
-        </div>
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <FaSpinner className="animate-spin text-primary text-4xl" />
       </div>
     );
   }
 
   return (
-    <>
-      {showVideo ? (
-        // Intro video
-        <div className="intro-container">
-          <video
-            autoPlay
-            muted
-            className="intro-video"
-            onEnded={() => setShowVideo(false)}
+    <div className="relative min-h-screen flex items-center justify-center bg-slate-900 overflow-hidden">
+      {/* Background Video/Image */}
+      <div className="absolute inset-0 z-0">
+        <video
+          autoPlay
+          muted
+          loop
+          className="w-full h-full object-cover opacity-40 blur-sm"
+        >
+          <source src="/Green Modern Grocery Delivery Video.mp4" type="video/mp4" />
+        </video>
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/80 to-transparent" />
+      </div>
+
+      <AnimatePresence mode="wait">
+        {showVideo ? (
+          <motion.div
+            key="intro"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black"
+            onClick={() => setShowVideo(false)}
           >
-            <source
-              src="/Green Modern Grocery Delivery Video.mp4"
-              type="video/mp4"
-            />
-            Your browser does not support the video tag.
-          </video>
-        </div>
-      ) : (
-        // Login form
-        <div className="login-background">
-          <form onSubmit={handleLogin}>
-            <div className="login-container">
-              <img src={Logo} alt="logo" />
-              <h1>
-                <b>Grocery Store Login</b>
-              </h1>
+            <video
+              autoPlay
+              muted
+              className="w-full h-full object-cover"
+              onEnded={() => setShowVideo(false)}
+            >
+              <source src="/Green Modern Grocery Delivery Video.mp4" type="video/mp4" />
+            </video>
+            <button className="absolute bottom-10 right-10 text-white/50 hover:text-white text-sm uppercase tracking-widest border border-white/20 px-4 py-2 rounded-full backdrop-blur-md">
+              Skip Intro
+            </button>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="login"
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: "out" }}
+            className="relative z-10 w-full max-w-md p-4"
+          >
+            <Card className="bg-slate-900/40 backdrop-blur-xl border-white/10 shadow-2xl">
+              <CardHeader className="text-center pb-2">
+                <motion.div
+                  initial={{ y: -20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                  className="mx-auto w-24 h-24 bg-white rounded-full p-1 mb-4 shadow-lg shadow-primary/20"
+                >
+                  <img src={Logo} alt="Expirey Eye" className="w-full h-full object-cover rounded-full" />
+                </motion.div>
+                <CardTitle className="text-3xl font-heading font-bold text-white mb-1">Welcome Back</CardTitle>
+                <p className="text-slate-400 text-sm">Sign in to manage your smart grocery store.</p>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleLogin} className="space-y-4">
+                  <Input
+                    icon={<FaUser className="text-slate-400" />}
+                    placeholder="Username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    required
+                    className="bg-slate-800/50 border-slate-700 text-white placeholder-slate-500 focus:bg-slate-800 focus:border-primary"
+                  />
+                  <Input
+                    icon={<FaLock className="text-slate-400" />}
+                    type="password"
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    className="bg-slate-800/50 border-slate-700 text-white placeholder-slate-500 focus:bg-slate-800 focus:border-primary"
+                  />
 
-              <input
-                type="text"
-                value={username}
-                placeholder="Username"
-                onChange={(e) => setUsername(e.target.value)}
-                required
-              />
+                  {error && (
+                    <motion.p
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-red-400 text-xs text-center bg-red-900/20 py-2 rounded border border-red-900/30"
+                    >
+                      {error}
+                    </motion.p>
+                  )}
 
-              <input
-                type="password"
-                value={password}
-                placeholder="Password"
-                autoComplete="current-password"
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+                  <div className="flex justify-end">
+                    <Link to="/signup" className="text-xs text-primary hover:text-primary-400 transition-colors">
+                      Forgot Password?
+                    </Link>
+                  </div>
 
-              <div className="login-links">
-                <p>
-                  <Link to="/signup">Forgot Password? or SignUp</Link>
-                </p>
-              </div>
+                  <Button
+                    type="submit"
+                    disabled={submitting}
+                    className="w-full h-12 text-base font-bold bg-gradient-to-r from-primary to-emerald-600 hover:from-primary-600 hover:to-emerald-700 border-0 shadow-lg shadow-primary/30"
+                    rightIcon={!submitting && <FaArrowRight />}
+                  >
+                    {submitting ? <FaSpinner className="animate-spin" /> : "Sign In"}
+                  </Button>
 
-              <button type="submit" disabled={submitting}>
-                {submitting ? "Logging in..." : "𝕃𝕠𝕘𝕚𝕟"}
-              </button>
-
-              {error && <p className="error">{error}</p>}
-            </div>
-          </form>
-        </div>
-      )}
-    </>
+                  <div className="pt-4 text-center">
+                    <p className="text-slate-400 text-sm">
+                      Don't have an account?{" "}
+                      <Link to="/signup" className="text-white font-semibold hover:underline decoration-primary underline-offset-4">
+                        Sign Up
+                      </Link>
+                    </p>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
