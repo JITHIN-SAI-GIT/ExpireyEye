@@ -3,6 +3,7 @@ import { MessageSquare, Send, X, Bot, User, Loader2, Sparkles } from 'lucide-rea
 import { Button } from './ui/Button';
 import { cn } from '../lib/utils';
 import axios from 'axios';
+import { API_BASE_URL } from '../config';
 
 const AIChat = () => {
     const [isOpen, setIsOpen] = useState(false);
@@ -34,7 +35,7 @@ const AIChat = () => {
         setIsLoading(true);
 
         try {
-            const { data } = await axios.post('/chat', { message: userMessage }); // Proxy should handle /chat -> http://localhost:3000/chat
+            const { data } = await axios.post(`${API_BASE_URL}/chat`, { message: userMessage }); // Proxy should handle /chat -> http://localhost:3000/chat
 
             // Add AI response
             setMessages(prev => [...prev, { role: 'assistant', content: data.response }]);

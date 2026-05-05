@@ -3,6 +3,7 @@ import axios from 'axios';
 import { FiX, FiCamera } from 'react-icons/fi';
 // 1. Remove the old import for 'react-qr-reader'
 import BarcodeScanner from "./Barcodescanner" // 2. Import your new scanner component
+import { API_BASE_URL } from "../config";
 
 function AddProductModal({ onClose, onProductAdded }) {
   const [formData, setFormData] = useState({ /* ... */ });
@@ -17,7 +18,7 @@ function AddProductModal({ onClose, onProductAdded }) {
     console.log(`Scanned barcode: ${barcode}`);
     
     try {
-      const response = await axios.get(`/api/products/lookup/${barcode}`);
+      const response = await axios.get(`${API_BASE_URL}/products/lookup/${barcode}`);
       const productInfo = response.data;
 
       setFormData({
@@ -35,7 +36,7 @@ function AddProductModal({ onClose, onProductAdded }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await axios.post('/api/products', formData);
+    await axios.post(`${API_BASE_URL}/products`, formData);
     alert('Product added successfully!');
     onProductAdded();
     onClose();

@@ -1,20 +1,23 @@
 import * as mobilenet from '@tensorflow-models/mobilenet';
-import '@tensorflow/tfjs';
+import * as tf from '@tensorflow/tfjs';
 
 let model = null;
 
 /**
  * Loads the MobileNet model if not already loaded.
- * @returns {Promise<Object>} The loaded model.
+ * Ensures TFJS is ready.
  */
 export const loadModel = async () => {
     if (model) return model;
     
     try {
-        console.log('Loading MobileNet...');
+        console.log('Initializing TFJS...');
+        await tf.ready();
+        
+        console.log('Loading MobileNet V2...');
         model = await mobilenet.load({
-            version: 1,
-            alpha: 1.0
+            version: 2,
+            alpha: 0.75
         });
         console.log('MobileNet Loaded Successfully');
         return model;
@@ -30,10 +33,10 @@ export const loadModel = async () => {
  * @returns {Promise<Array>} List of predictions.
  */
 export const classifyImage = async (element) => {
-    const loadedModel = await loadModel();
-    if (!loadedModel) return [];
-    
     try {
+        const loadedModel = await loadModel();
+        if (!loadedModel) return [];
+        
         const predictions = await loadedModel.classify(element);
         return predictions;
     } catch (error) {

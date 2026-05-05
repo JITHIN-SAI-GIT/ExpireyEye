@@ -4,6 +4,7 @@ import { FiVideo, FiLoader, FiPlay, FiSearch, FiFilm } from "react-icons/fi";
 import axios from "axios";
 import { useAuth } from "../contexts/AuthContext";
 import Sidebar from "./Sidebar";
+import { API_BASE_URL } from "../config";
 
 const MarketingData = () => {
     const [products, setProducts] = useState([]);
@@ -20,7 +21,7 @@ const MarketingData = () => {
 
     const fetchProducts = async () => {
         try {
-            const response = await axios.get("http://localhost:3000/products/list");
+            const response = await axios.get(`${API_BASE_URL}/products/list`);
             setProducts(response.data);
             setLoading(false);
         } catch (error) {
@@ -39,7 +40,7 @@ const MarketingData = () => {
             const imageUrl = product.image_url || "https://via.placeholder.com/600x400?text=Product+Image";
 
             const response = await axios.post(
-                "http://localhost:3000/marketing/generate-video",
+                `${API_BASE_URL}/marketing/generate-video`,
                 {
                     imageUrl: imageUrl,
                     prompt: `Cinematic pan of ${product.name}, 4k promotion`,

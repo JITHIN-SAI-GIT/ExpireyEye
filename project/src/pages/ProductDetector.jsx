@@ -63,8 +63,15 @@ const ProductDetector = () => {
         let animationId;
         const runClassification = async () => {
             if (isCameraActive && videoRef.current && !isModelLoading) {
-                const results = await classifyImage(videoRef.current);
-                setPredictions(results);
+                // Ensure video has enough data before classification to avoid errors
+                if (videoRef.current.readyState >= 2) { 
+                    try {
+                        const results = await classifyImage(videoRef.current);
+                        setPredictions(results);
+                    } catch (err) {
+                        console.error("Classification loop error:", err);
+                    }
+                }
                 animationId = requestAnimationFrame(runClassification);
             }
         };

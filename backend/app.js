@@ -1,4 +1,3 @@
-// ==================== ENV & DEPENDENCIES ====================
 require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
@@ -6,6 +5,7 @@ const passport = require("passport");
 const LocalStrategy = require("passport-local").Strategy;
 const session = require("express-session");
 const cors = require("cors");
+const path = require("path");
 
 const User = require("./models/User");
 const Product = require("./models/Products");
@@ -28,7 +28,7 @@ console.log("ATLAS_URL is defined.");
 
 // ==================== CORS CONFIG ====================
 
-const allowedOrigins = ["http://localhost:5173", "http://localhost:3000"];
+const allowedOrigins = ["http://localhost:5173", "http://localhost:5174", "http://localhost:3000", "http://127.0.0.1:5173", "http://127.0.0.1:5174"];
 
 app.use(
   cors({
@@ -89,7 +89,8 @@ app.post("/signup", async (req, res) => {
     await User.register(newUser, password);
     res.json({ message: "User created successfully" });
   } catch (err) {
-    res.status(400).json({ message: "Signup failed", error: err });
+    console.error("[SIGNUP ERROR]", err.message || err);
+    res.status(400).json({ message: "Signup failed", error: err.message || "An error occurred during signup." });
   }
 });
 
@@ -97,8 +98,8 @@ app.post("/login", (req, res, next) => {
   console.log(`[LOGIN ATTEMPT] Username: ${req.body.username}`);
   passport.authenticate("local", (err, user, info) => {
     if (err) {
-      console.error("[LOGIN ERROR] Server error:", err);
-      return res.status(500).json({ message: "Server error", error: err });
+      console.error("[LOGIN ERROR] Server error:", err.message || err);
+      return res.status(500).json({ message: "Server error", error: err.message || "An error occurred during login." });
     }
     if (!user) {
       console.warn("[LOGIN FAILED] Invalid credentials:", info);
@@ -106,8 +107,8 @@ app.post("/login", (req, res, next) => {
     }
     req.logIn(user, (err) => {
       if (err) {
-        console.error("[LOGIN SESSION ERROR] Req.logIn failed:", err);
-        return res.status(500).json({ message: "Session login failed", error: err });
+        console.error("[LOGIN SESSION ERROR] Req.logIn failed:", err.message || err);
+        return res.status(500).json({ message: "Session login failed", error: err.message || "Session error." });
       }
       console.log(`[LOGIN SUCCESS] User: ${user.username}`);
       return res.json({ message: "Logged in", user });
@@ -153,6 +154,17 @@ app.use("/ml", require("./routes/mlRoutes"));
 app.use("/marketing", require("./routes/marketingRoutes"));
 app.use("/chat", require("./routes/chatRoutes"));
 
+
+// ==================== SERVE FRONTEND ====================
+
+// Serve frontend static files
+const frontendDistPath = path.join(__dirname, "../project/dist");
+app.use(express.static(frontendDistPath));
+
+// Catch-all route to serve the React app for non-API requests
+app.get("*", (req, res) => {
+  res.sendFile(path.join(frontendDistPath, "index.html"));
+});
 
 // ==================== START SERVER ====================
 

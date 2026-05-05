@@ -19,6 +19,8 @@ const productSchema = new mongoose.Schema({
     default: ""
   },
   expiryDate: Date,
+  username: { type: String, default: "admin" }, // Track who added it
+  info_updated: { type: Date, default: Date.now }, // Track manual updates
   // 🧠 ML / Smart Discount Fields
   ml_discount: { type: Number, default: 0 },
   clearance_flag: { type: Boolean, default: false },

@@ -1,0 +1,13 @@
+{
+  "name": "expireery-deployment",
+  "version": "1.0.0",
+  "description": "Root package for deployment",
+  "scripts": {
+    "install": "cd backend && npm install && cd ../project && npm install",
+    "build": "cd project && npm run build",
+    "start": "cd backend && node app.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

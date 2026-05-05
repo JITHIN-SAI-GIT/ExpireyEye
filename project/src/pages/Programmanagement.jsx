@@ -93,37 +93,68 @@ const ProductManagement = () => {
         </div>
 
         {/* Filters & Search */}
-        <Card>
-          <CardContent className="p-4 flex flex-col md:flex-row gap-4 items-center">
-            <div className="relative flex-1 w-full">
+        <section className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4">
+          <div className="flex flex-col lg:flex-row gap-4">
+            {/* Search Input */}
+            <div className="relative flex-1 group">
               <Input
                 placeholder="Search products by name..."
-                icon={<FiSearch />}
+                icon={<FiSearch className="group-focus-within:text-primary transition-colors" />}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="bg-slate-50"
+                className="bg-slate-50/50 border-slate-200 focus:bg-white focus:ring-primary/20 h-11 transition-all"
               />
             </div>
-            <div className="flex items-center gap-2 w-full md:w-auto">
-              <Input
-                type="date"
-                value={dateFilter}
-                onChange={(e) => setDateFilter(e.target.value)}
-                className="w-full md:w-40 bg-slate-50"
-              />
-              <FiFilter className="text-slate-400" />
-              <select
-                value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value)}
-                className="h-11 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 w-full md:w-48"
-              >
-                {categories.map(cat => (
-                  <option key={cat} value={cat}>{cat === 'all' ? 'All Categories' : cat}</option>
-                ))}
-              </select>
+
+            {/* Filter Group */}
+            <div className="flex flex-col sm:flex-row gap-3 items-center">
+              <div className="relative w-full sm:w-auto overflow-hidden">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest absolute left-3 top-1 z-10 pointer-events-none">
+                  Added Date
+                </label>
+                <Input
+                  type="date"
+                  value={dateFilter}
+                  onChange={(e) => setDateFilter(e.target.value)}
+                  className="w-full sm:w-44 bg-slate-50/50 border-slate-200 h-11 pt-4 text-xs"
+                />
+              </div>
+
+              <div className="relative w-full sm:w-auto group">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest absolute left-3 top-1 z-10 pointer-events-none group-focus-within:text-primary">
+                  Category
+                </label>
+                <select
+                  value={categoryFilter}
+                  onChange={(e) => setCategoryFilter(e.target.value)}
+                  className="h-11 w-full sm:w-48 pt-4 rounded-xl border border-slate-200 bg-slate-50/50 px-3 text-xs font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none cursor-pointer"
+                >
+                  {categories.map(cat => (
+                    <option key={cat} value={cat}>{cat === 'all' ? 'All Inventory' : cat}</option>
+                  ))}
+                </select>
+                <div className="absolute right-3 top-4 pointer-events-none text-slate-400">
+                  <FiFilter size={14} />
+                </div>
+              </div>
+
+              {searchTerm || categoryFilter !== 'all' || dateFilter ? (
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => {
+                    setSearchTerm("");
+                    setCategoryFilter("all");
+                    setDateFilter("");
+                  }}
+                  className="text-slate-400 hover:text-primary h-11 px-4"
+                >
+                  Reset
+                </Button>
+              ) : null}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </section>
 
         {/* Product Table */}
         <Card>

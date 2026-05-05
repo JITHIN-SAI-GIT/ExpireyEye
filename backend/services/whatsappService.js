@@ -20,7 +20,7 @@ const sendReceiptToWhatsApp = async (toName, toPhone, pdfBuffer, orderId) => {
         formattedPhone = '91' + formattedPhone; // Default to India if 10 digits
     }
     const to = `whatsapp:+${formattedPhone}`;
-    const from = fromPhone.startsWith('whatsapp:') ? fromPhone : `whatsapp:${fromPhone}`;
+    const from = (fromPhone && fromPhone.startsWith('whatsapp:')) ? fromPhone : `whatsapp:${fromPhone}`;
 
     if (!client) {
         console.log(`[SIMULATION] Sending WhatsApp to ${to} (${toName}): "Thank you for shopping..." (PDF attached)`);
