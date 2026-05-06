@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
-import KpiCard from './KpiCard';
+import KpiCard from './Kpicard';
 import Navbar from "./Navbar";
 import Charts from "./Chats";
 import AddProductModal from "../components/Addnewproduct";
