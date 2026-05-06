@@ -160,26 +160,41 @@ app.use("/chat", require("./routes/chatRoutes"));
 
 // ==================== SERVE FRONTEND ====================
 
-// Serve frontend static files
-const frontendDistPath = path.join(__dirname, "../project/dist");
-app.use(express.static(frontendDistPath));
+const fs = require('fs');
 
-// Catch-all route to serve the React app for non-API requests
-app.get("*", (req, res) => {
-  res.sendFile(path.join(frontendDistPath, "index.html"));
-});
+// Serve frontend static files only if the dist folder exists (Monolithic deployment)
+const frontendDistPath = path.join(__dirname, "../project/dist");
+if (fs.existsSync(frontendDistPath)) {
+  app.use(express.static(frontendDistPath));
+  
+  // Catch-all route to serve the React app for non-API requests
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(frontendDistPath, "index.html"));
+  });
+} else {
+  // If deployed separately as an API, provide a simple health check root route
+  app.get("/", (req, res) => {
+    res.json({ message: "ExpireyEye API is running perfectly!" });
+  });
+}
 
 // ==================== START SERVER ====================
 
 const PORT = process.env.PORT || 3000;
 
+console.log("Attempting to connect to MongoDB...");
 mongoose
-  .connect(connectURL)
+  .connect(connectURL, { serverSelectionTimeoutMS: 5000 })
   .then(() => {
-    console.log("✅ Database connected");
-    app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+    console.log("✅ Database connected successfully!");
+    app.listen(PORT, '0.0.0.0', () => console.log(`🚀 Server running and bound to port ${PORT}`));
   })
   .catch((err) => {
-    console.error("❌ DB Error:", err);
+    console.error("❌ CRITICAL DB CONNECTION ERROR:");
+    console.error("Error Name:", err.name);
+    console.error("Error Message:", err.message);
+    if (err.message.includes("IP")) {
+      console.error("👉 FIX: You need to go to MongoDB Atlas -> Network Access -> Add IP Address -> Allow Access From Anywhere (0.0.0.0/0)");
+    }
     process.exit(1);
   });
