@@ -6,6 +6,25 @@ import { useAuth } from "../contexts/AuthContext";
 import Sidebar from "./Sidebar";
 import { API_BASE_URL } from "../config";
 
+const getCategoryImage = (category) => {
+    const images = {
+        'Dairy': 'https://images.unsplash.com/photo-1628088062854-d1870b4553da?w=400&q=80',
+        'Bakery': 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&q=80',
+        'Beverages': 'https://images.unsplash.com/photo-1544145945-f90425340c7e?w=400&q=80',
+        'Snacks': 'https://images.unsplash.com/photo-1599490659213-e2b9527bd08c?w=400&q=80',
+        'Fruits': 'https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=400&q=80',
+        'Vegetables': 'https://images.unsplash.com/photo-1566385101042-1a0aa0c1268c?w=400&q=80',
+        'Meat': 'https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?w=400&q=80',
+        'Seafood': 'https://images.unsplash.com/photo-1615141982883-c7ad0e69fd62?w=400&q=80',
+        'Frozen Foods': 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=400&q=80',
+        'Pantry': 'https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?w=400&q=80',
+        'Personal Care': 'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=400&q=80',
+        'Household': 'https://images.unsplash.com/photo-1584820927498-cafe2c1686ed?w=400&q=80',
+        'Default': 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&q=80'
+    };
+    return images[category] || images['Default'];
+};
+
 const MarketingData = () => {
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -37,7 +56,7 @@ const MarketingData = () => {
 
         try {
             // Use product image or a placeholder if missing
-            const imageUrl = product.image_url || "https://via.placeholder.com/600x400?text=Product+Image";
+            const imageUrl = product.image || getCategoryImage(product.category);
 
             const response = await axios.post(
                 `${API_BASE_URL}/marketing/generate-video`,
@@ -118,7 +137,7 @@ const MarketingData = () => {
                                         <div className="flex gap-4">
                                             <div className="w-24 h-24 rounded-xl overflow-hidden bg-slate-100 flex-shrink-0">
                                                 <img
-                                                    src={product.image_url || "https://via.placeholder.com/100"}
+                                                    src={product.image || getCategoryImage(product.category)}
                                                     alt={product.name}
                                                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                                                 />
@@ -210,7 +229,7 @@ const MarketingData = () => {
                                                 ) : selectedProduct ? (
                                                     <div className="space-y-4">
                                                         <img
-                                                            src={selectedProduct.image_url}
+                                                            src={selectedProduct.image || getCategoryImage(selectedProduct.category)}
                                                             alt="Preview"
                                                             className="w-32 h-32 rounded-lg object-cover mx-auto shadow-md"
                                                         />

@@ -38,7 +38,7 @@ export default function Navbar({ onAddNewProduct, onSearch }) {
           placeholder="Search products, orders..."
           icon={<FiSearch size={18} className="text-slate-400 group-hover:text-primary transition-colors" />}
           onChange={(e) => onSearch && onSearch(e.target.value)}
-          className="bg-slate-50 border-slate-200 focus:bg-white focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all pl-10 h-10 shadow-sm group-hover:bg-white"
+          className="bg-slate-50 border-slate-200 focus:bg-white focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all h-10 shadow-sm group-hover:bg-white"
         />
       </div>
 
