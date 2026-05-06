@@ -55,10 +55,16 @@ app.use("/public", express.static("public")); // Serve static files
 app.set("trust proxy", 1); // REQUIRED when using cookies across ports
 
 
+const MongoStore = require('connect-mongo');
+
 app.use(session({
   secret: process.env.SECRET || "fallback_secret",
   resave: false,
   saveUninitialized: false,
+  store: MongoStore.create({ 
+    mongoUrl: process.env.ATLAS_URL,
+    collectionName: 'sessions' 
+  }),
   cookie: {
     secure: false,
     sameSite: "lax",
