@@ -5,6 +5,9 @@ import Sidebar from './Sidebar';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
+import axios from 'axios';
+import { API_BASE_URL } from '../config';
+import { FiBox } from 'react-icons/fi';
 
 const ProductDetector = () => {
     const videoRef = useRef(null);
@@ -14,6 +17,8 @@ const ProductDetector = () => {
     const [isCameraActive, setIsCameraActive] = useState(false);
     const [error, setError] = useState(null);
     const [stream, setStream] = useState(null);
+    const [matchedProducts, setMatchedProducts] = useState([]);
+    const [isSearching, setIsSearching] = useState(false);
 
     useEffect(() => {
         const initModel = async () => {
@@ -61,13 +66,23 @@ const ProductDetector = () => {
 
     useEffect(() => {
         let animationId;
+        let lastSearchTime = 0;
+
         const runClassification = async () => {
             if (isCameraActive && videoRef.current && !isModelLoading) {
-                // Ensure video has enough data before classification to avoid errors
                 if (videoRef.current.readyState >= 2) { 
                     try {
                         const results = await classifyImage(videoRef.current);
                         setPredictions(results);
+
+                        // Trigger backend search if confidence is high and we haven't searched recently
+                        if (results.length > 0 && results[0].probability > 0.25) {
+                            const now = Date.now();
+                            if (now - lastSearchTime > 3000) { // Throttled to max 1 search per 3 seconds
+                                lastSearchTime = now;
+                                searchBackendProducts(results[0].className);
+                            }
+                        }
                     } catch (err) {
                         console.error("Classification loop error:", err);
                     }
@@ -84,6 +99,18 @@ const ProductDetector = () => {
             if (animationId) cancelAnimationFrame(animationId);
         };
     }, [isCameraActive, isModelLoading]);
+
+    const searchBackendProducts = async (searchTerm) => {
+        try {
+            setIsSearching(true);
+            const res = await axios.get(`${API_BASE_URL}/products/search?q=${searchTerm}`);
+            setMatchedProducts(res.data);
+        } catch (err) {
+            console.error("Failed to search backend products", err);
+        } finally {
+            setIsSearching(false);
+        }
+    };
 
     return (
         <div className="flex h-screen w-full bg-slate-50 font-sans overflow-hidden text-slate-900">
@@ -183,14 +210,37 @@ const ProductDetector = () => {
                             )}
                         </div>
 
-                        {predictions.length > 0 && (
-                            <div className="mt-4 p-4 bg-blue-50 border border-blue-100 rounded-xl">
-                                <p className="text-xs text-blue-600 font-medium uppercase tracking-wider mb-2">Editor Note</p>
-                                <p className="text-sm text-blue-800 leading-relaxed">
-                                    You can now edit this code in <code className="bg-blue-100 px-1 rounded">ProductDetector.jsx</code> to integrate with your backend product search.
+                        {/* Matched Products Section */}
+                        <div className="mt-4 border-t border-slate-200 pt-4">
+                            <h3 className="text-lg font-bold flex items-center gap-2 mb-3">
+                                <FiBox className="text-primary" />
+                                Inventory Matches
+                            </h3>
+                            {isSearching ? (
+                                <div className="flex justify-center p-4"><FaSpinner className="animate-spin text-primary" /></div>
+                            ) : matchedProducts.length > 0 ? (
+                                <div className="space-y-3">
+                                    {matchedProducts.map((prod) => (
+                                        <Card key={prod._id} className="p-3 flex items-center gap-3 border-l-4 border-l-primary">
+                                            <div className="w-12 h-12 bg-slate-100 rounded overflow-hidden flex-shrink-0">
+                                                <img src={prod.image || prod.image_url || 'https://via.placeholder.com/50'} alt={prod.name} className="w-full h-full object-cover" />
+                                            </div>
+                                            <div className="flex-1">
+                                                <p className="font-bold text-slate-800 text-sm line-clamp-1">{prod.name}</p>
+                                                <div className="flex justify-between items-center mt-1">
+                                                    <span className="text-xs text-slate-500">{prod.category}</span>
+                                                    <span className="text-xs font-bold text-emerald-600">Stock: {prod.quantity}</span>
+                                                </div>
+                                            </div>
+                                        </Card>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-sm text-slate-500 bg-slate-100 p-3 rounded-xl text-center">
+                                    No items in inventory matched the detection.
                                 </p>
-                            </div>
-                        )}
+                            )}
+                        </div>
                     </div>
                 </main>
             </div>

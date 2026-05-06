@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { FaUser, FaLock, FaSpinner, FaArrowRight } from "react-icons/fa";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
@@ -12,7 +12,6 @@ export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [showVideo, setShowVideo] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
   const navigate = useNavigate();
@@ -24,12 +23,6 @@ export default function Login() {
       navigate("/dashboard", { replace: true });
     }
   }, [isAuthenticated, loading, navigate]);
-
-  // Auto-hide intro video after 5 seconds
-  useEffect(() => {
-    const timer = setTimeout(() => setShowVideo(false), 4500);
-    return () => clearTimeout(timer);
-  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -63,6 +56,7 @@ export default function Login() {
           autoPlay
           muted
           loop
+          playsInline
           className="w-full h-full object-cover opacity-40 blur-sm"
         >
           <source src="/Green Modern Grocery Delivery Video.mp4" type="video/mp4" />
@@ -70,36 +64,12 @@ export default function Login() {
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/80 to-transparent" />
       </div>
 
-      <AnimatePresence mode="wait">
-        {showVideo ? (
-          <motion.div
-            key="intro"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black"
-            onClick={() => setShowVideo(false)}
-          >
-            <video
-              autoPlay
-              muted
-              className="w-full h-full object-cover"
-              onEnded={() => setShowVideo(false)}
-            >
-              <source src="/Green Modern Grocery Delivery Video.mp4" type="video/mp4" />
-            </video>
-            <button className="absolute bottom-10 right-10 text-white/50 hover:text-white text-sm uppercase tracking-widest border border-white/20 px-4 py-2 rounded-full backdrop-blur-md">
-              Skip Intro
-            </button>
-          </motion.div>
-        ) : (
-          <motion.div
-            key="login"
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: "out" }}
-            className="relative z-10 w-full max-w-md p-4"
-          >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "out" }}
+        className="relative z-10 w-full max-w-md p-4"
+      >
             <Card className="bg-slate-900/40 backdrop-blur-xl border-white/10 shadow-2xl">
               <CardHeader className="text-center pb-2">
                 <motion.div
@@ -170,8 +140,6 @@ export default function Login() {
               </CardContent>
             </Card>
           </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

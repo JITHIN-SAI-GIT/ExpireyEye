@@ -90,6 +90,24 @@ router.post("/add", auth, async (req, res) => {
   }
 });
 
+// Search products
+router.get("/search", async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q) return res.json([]);
+    
+    // Create a flexible regex search
+    const regex = new RegExp(q.split(',')[0].trim(), "i");
+    const products = await Product.find({
+      $or: [{ name: regex }, { category: regex }]
+    });
+    res.json(products);
+  } catch (err) {
+    console.error("Search error:", err);
+    res.status(500).json({ message: "Server error during search" });
+  }
+});
+
 // Get all products
 router.get("/", async (req, res) => {
   try {

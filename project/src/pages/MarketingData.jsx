@@ -21,7 +21,7 @@ const MarketingData = () => {
 
     const fetchProducts = async () => {
         try {
-            const response = await axios.get(`${API_BASE_URL}/products/list`);
+            const response = await axios.get(`${API_BASE_URL}/products`);
             setProducts(response.data);
             setLoading(false);
         } catch (error) {
