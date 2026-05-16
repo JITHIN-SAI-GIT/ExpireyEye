@@ -35,7 +35,7 @@ const AIChat = () => {
         setIsLoading(true);
 
         try {
-            const { data } = await axios.post(`${API_BASE_URL}/chat`, { message: userMessage }); // Proxy should handle /chat -> http://localhost:3000/chat
+            const { data } = await axios.post(`${API_BASE_URL}/chat`, { message: userMessage }, { withCredentials: true }); // Proxy should handle /chat -> http://localhost:3000/chat
 
             // Add AI response
             setMessages(prev => [...prev, { role: 'assistant', content: data.response }]);

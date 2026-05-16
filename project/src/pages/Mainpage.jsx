@@ -50,7 +50,7 @@ function MainContent() {
 
   const runMLEngine = async () => {
     try {
-      const res = await axios.post(`${API_BASE_URL}/ml/predict-discount`);
+      const res = await axios.post(`${API_BASE_URL}/ml/predict-discount`, {}, { withCredentials: true });
       alert(`🧠 ML Engine Run Successfully!\n\n📋 Scored: ${res.data.productsScored} items\n🏷️ Discounted: ${res.data.discountedItems} items`);
       fetchData(); // Refresh data immediately
     } catch (err) {
@@ -67,7 +67,7 @@ function MainContent() {
   const deleteProduct = async (id) => {
     if (!window.confirm("Are you sure you want to resolve/delete this product?")) return;
     try {
-      await axios.delete(`${API_BASE_URL}/products/${id}`);
+      await axios.delete(`${API_BASE_URL}/products/${id}`, { withCredentials: true });
       // Optimistic update
       setUrgentProducts(p => p.filter(i => i._id !== id));
       setExpiringProducts(p => p.filter(i => i._id !== id));
@@ -79,7 +79,7 @@ function MainContent() {
 
   const applyDiscount = async (id) => {
     try {
-      await axios.post(`${API_BASE_URL}/products/${id}/discount`, { discount: 50 });
+      await axios.post(`${API_BASE_URL}/products/${id}/discount`, { discount: 50 }, { withCredentials: true });
       alert("✅ 50% Discount Applied! Prices updated in POS.");
       fetchData(); // Refresh list to show updated status
     } catch (err) {

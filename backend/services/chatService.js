@@ -43,6 +43,11 @@ Instructions:
 
     console.log("Sending prompt to Replicate...");
 
+    if (!process.env.REPLICATE_API_TOKEN) {
+      console.warn("REPLICATE_API_TOKEN is missing. Returning fallback response.");
+      return `[Demo Mode] I am the AI Assistant. I see you asked: "${userMessage}". (Set REPLICATE_API_TOKEN to enable real AI responses).`;
+    }
+
     // 3. Call Replicate API (Llama 3)
     const input = {
       prompt: userMessage,
